@@ -13,6 +13,7 @@ export const JOB_POSTS_QUERY = gql`
         postedAt
         postedBy
         sourceUrl
+        jobSource
         status
         applicationCount
         savedProfileIds
@@ -172,6 +173,7 @@ export const JOB_APPLICATIONS_QUERY = gql`
           postedBy
           locations
           salary
+          jobSource
         }
         jobProfile {
           id

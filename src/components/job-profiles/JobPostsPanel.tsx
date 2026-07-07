@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery, useMutation, useApolloClient } from '@apollo/client/react'
 import { formatDistanceToNow } from 'date-fns'
 import Link from 'next/link'
-import { Search, RefreshCw, X, Clock, Sparkles, MapPin, Check, ChevronsUpDown } from 'lucide-react'
+import { Search, RefreshCw, X, Clock, Sparkles, MapPin, Check, ChevronsUpDown, Globe } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -26,6 +26,7 @@ interface Post {
   createdAt: string
   locations?: string[]
   salary?: string | null
+  jobSource?: string | null
 }
 
 interface JobPostsPanelProps {
@@ -489,7 +490,15 @@ function PostRow({ post, isNew, checked, onCheck, onSave, onDismissNew, saving }
             </Badge>
           )}
         </div>
-        <p className="text-xs text-muted-foreground truncate">{post.postedBy}</p>
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className="text-xs text-muted-foreground truncate">{post.postedBy}</p>
+          {post.jobSource && (
+            <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
+              <Globe className="h-3 w-3 shrink-0" />
+              {post.jobSource}
+            </span>
+          )}
+        </div>
         {post.locations && post.locations.length > 0 && (
           <p className="text-xs text-muted-foreground truncate">{post.locations.join(' · ')}</p>
         )}

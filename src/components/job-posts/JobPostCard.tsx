@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useMutation, useQuery } from '@apollo/client/react'
-import { MapPin, DollarSign, Calendar, ExternalLink, MoreHorizontal, Tag } from 'lucide-react'
+import { MapPin, DollarSign, Calendar, ExternalLink, MoreHorizontal, Tag, Globe } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -32,6 +32,7 @@ interface JobPostCardProps {
     postedAt: string
     postedBy: string
     sourceUrl?: string | null
+    jobSource?: string | null
     status: string
     applicationCount: number
     tags?: { id: string; label: string; value: string }[]
@@ -86,6 +87,12 @@ export function JobPostCard({ post }: JobPostCardProps) {
           </div>
           <div className="flex items-center flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground mt-0.5">
             <span>{post.postedBy}</span>
+            {post.jobSource && (
+              <span className="flex items-center gap-1">
+                <Globe className="h-3 w-3 shrink-0" />
+                {post.jobSource}
+              </span>
+            )}
             {locations.length > 0 && (
               <span className="flex items-center gap-1">
                 <MapPin className="h-3 w-3 shrink-0" />
