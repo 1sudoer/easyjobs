@@ -12,6 +12,7 @@ import {
   CalendarIcon,
   X,
   PanelRight,
+  Globe,
 } from 'lucide-react'
 
 import { Input } from '@/components/ui/input'
@@ -358,6 +359,12 @@ export function ProfileApplicationsView({ initialLocations = [] }: { initialLoca
                   </Link>
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-muted-foreground">
                     <span>{app.jobPost.postedBy}</span>
+                    {app.jobPost.jobSource && (
+                      <span className="flex items-center gap-1">
+                        <Globe className="h-3 w-3 shrink-0" />
+                        {app.jobPost.jobSource}
+                      </span>
+                    )}
                     {app.jobPost.locations?.length > 0 && (
                       <span className="flex items-center gap-1">
                         <MapPin className="h-3 w-3 shrink-0" />

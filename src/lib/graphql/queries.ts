@@ -173,6 +173,7 @@ export const JOB_APPLICATIONS_QUERY = gql`
           postedBy
           locations
           salary
+          jobSource
         }
         jobProfile {
           id
