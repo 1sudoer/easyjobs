@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { useQuery } from '@apollo/client/react'
 import Link from 'next/link'
 import { format } from 'date-fns'
@@ -52,16 +53,40 @@ function getDateFilter(preset: DatePreset, customStart: Date | undefined): { sta
 }
 
 export function JobPostsContainer({ initialLocations, initialTags }: JobPostsContainerProps) {
-  const [search, setSearch] = useState('')
-  const [status, setStatus] = useState('all')
-  const [page, setPage] = useState(1)
-  const [datePreset, setDatePreset] = useState<DatePreset>(null)
-  const [customStartDate, setCustomStartDate] = useState<Date | undefined>(undefined)
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  // Filter state derived from URL params
+  const search = searchParams.get('q') ?? ''
+  const status = searchParams.get('status') ?? 'all'
+  const page = parseInt(searchParams.get('page') ?? '1', 10)
+  const datePreset = (searchParams.get('date') as DatePreset) ?? null
+  const customStartDateStr = searchParams.get('customDate')
+  const customStartDate = customStartDateStr ? new Date(customStartDateStr) : undefined
+  const locationFilter = searchParams.get('location') ?? null
+  const tagFilter = searchParams.getAll('tag')
+
+  // UI-only state (not persisted in URL)
   const [datePopoverOpen, setDatePopoverOpen] = useState(false)
-  const [locationFilter, setLocationFilter] = useState<string | null>(null)
   const [locationPopoverOpen, setLocationPopoverOpen] = useState(false)
-  const [tagFilter, setTagFilter] = useState<string[]>([])
   const [tagPopoverOpen, setTagPopoverOpen] = useState(false)
+
+  function updateParams(updates: Record<string, string | string[] | null>, resetPage = true) {
+    const params = new URLSearchParams(searchParams.toString())
+    if (resetPage) params.delete('page')
+    for (const [key, value] of Object.entries(updates)) {
+      if (value === null || value === '') {
+        params.delete(key)
+      } else if (Array.isArray(value)) {
+        params.delete(key)
+        value.forEach((v) => params.append(key, v))
+      } else {
+        params.set(key, value)
+      }
+    }
+    router.replace(`${pathname}?${params.toString()}`)
+  }
 
   const dateFilter = getDateFilter(datePreset, customStartDate)
 
@@ -87,24 +112,21 @@ export function JobPostsContainer({ initialLocations, initialTags }: JobPostsCon
 
   function handlePresetClick(preset: DatePreset) {
     if (datePreset === preset) {
-      setDatePreset(null)
+      updateParams({ date: null, customDate: null })
     } else {
-      setDatePreset(preset)
-      setCustomStartDate(undefined)
+      updateParams({ date: preset as string, customDate: null })
     }
-    setPage(1)
   }
 
   function handleCustomDateSelect(date: Date | undefined) {
-    setCustomStartDate(date)
-    setDatePreset('custom')
-    setPage(1)
+    updateParams({
+      date: 'custom',
+      customDate: date ? date.toISOString().split('T')[0] : null,
+    })
   }
 
   function clearDateFilter() {
-    setDatePreset(null)
-    setCustomStartDate(undefined)
-    setPage(1)
+    updateParams({ date: null, customDate: null })
   }
 
   const dateLabel = (() => {
@@ -142,11 +164,11 @@ export function JobPostsContainer({ initialLocations, initialTags }: JobPostsCon
             placeholder="Search by title, company..."
             className="pl-9"
             value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+            onChange={(e) => updateParams({ q: e.target.value || null })}
           />
         </div>
 
-        <Select value={status} onValueChange={(v) => { setStatus(v); setPage(1) }}>
+        <Select value={status} onValueChange={(v) => updateParams({ status: v === 'all' ? null : v })}>
           <SelectTrigger className="w-36">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
@@ -170,7 +192,7 @@ export function JobPostsContainer({ initialLocations, initialTags }: JobPostsCon
               >
                 {locationFilter ?? 'All locations'}
                 {locationFilter
-                  ? <X className="h-3.5 w-3.5 opacity-50" onClick={(e) => { e.stopPropagation(); setLocationFilter(null); setPage(1) }} />
+                  ? <X className="h-3.5 w-3.5 opacity-50" onClick={(e) => { e.stopPropagation(); updateParams({ location: null }) }} />
                   : <ChevronsUpDown className="h-3.5 w-3.5 opacity-50" />
                 }
               </Button>
@@ -186,8 +208,7 @@ export function JobPostsContainer({ initialLocations, initialTags }: JobPostsCon
                         key={loc.id}
                         value={loc.label}
                         onSelect={() => {
-                          setLocationFilter((prev) => prev === loc.label ? null : loc.label)
-                          setPage(1)
+                          updateParams({ location: locationFilter === loc.label ? null : loc.label })
                           setLocationPopoverOpen(false)
                         }}
                       >
@@ -232,12 +253,10 @@ export function JobPostsContainer({ initialLocations, initialTags }: JobPostsCon
                         key={tag.id}
                         value={tag.value}
                         onSelect={() => {
-                          setTagFilter((prev) =>
-                            prev.includes(tag.value)
-                              ? prev.filter((v) => v !== tag.value)
-                              : [...prev, tag.value]
-                          )
-                          setPage(1)
+                          const next = tagFilter.includes(tag.value)
+                            ? tagFilter.filter((v) => v !== tag.value)
+                            : [...tagFilter, tag.value]
+                          updateParams({ tag: next.length ? next : null })
                         }}
                       >
                         <Check
@@ -257,7 +276,7 @@ export function JobPostsContainer({ initialLocations, initialTags }: JobPostsCon
                     variant="ghost"
                     size="sm"
                     className="w-full h-7 text-xs text-muted-foreground"
-                    onClick={() => { setTagFilter([]); setPage(1) }}
+                    onClick={() => updateParams({ tag: null })}
                   >
                     Clear selection
                   </Button>
@@ -341,11 +360,11 @@ export function JobPostsContainer({ initialLocations, initialTags }: JobPostsCon
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 pt-2">
-          <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+          <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => updateParams({ page: String(page - 1) }, false)}>
             Previous
           </Button>
           <span className="text-sm text-muted-foreground">Page {page} of {totalPages}</span>
-          <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>
+          <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => updateParams({ page: String(page + 1) }, false)}>
             Next
           </Button>
         </div>
