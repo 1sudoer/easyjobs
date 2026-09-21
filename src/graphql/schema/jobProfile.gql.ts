@@ -8,7 +8,7 @@ export const jobProfileTypeDefs = /* GraphQL */ `
     github: String
     address: String
     description: String
-    details: String
+    details: String!
     isDefault: Boolean!
     createdAt: String!
     updatedAt: String!
@@ -50,7 +50,7 @@ export const jobProfileTypeDefs = /* GraphQL */ `
     github: String
     address: String
     description: String
-    details: String
+    details: String!
     isDefault: Boolean
   }
 
