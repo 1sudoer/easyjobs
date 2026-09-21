@@ -1,6 +1,5 @@
 import Image from "next/image";
 import { CurrentUser } from "@/models/user.model";
-// import { useSession } from "next-auth/react";
 
 export default function UserAvatar({ user }: { user: CurrentUser | null }) {
   // const { data: session, status } = useSession();

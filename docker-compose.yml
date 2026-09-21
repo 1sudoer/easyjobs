@@ -7,10 +7,21 @@ services:
     environment:
       - NODE_ENV=production
       - DATABASE_URL=${DATABASE_URL}
-      - AUTH_SECRET=${AUTH_SECRET:-your-auth-secret}
+      - DIRECT_URL=${DIRECT_URL}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY:-you-encryption-key-here}
-      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3737}
-      - AUTH_TRUST_HOST=${AUTH_TRUST_HOST:-true}
+      # --- Toka Auth / Clerk (replaces next-auth) ---
+      # NOTE: NEXT_PUBLIC_* are inlined at BUILD time by Next.js. Setting them
+      # here only reaches server-side code; a prebuilt image needs the
+      # publishable key baked in at build time, or the browser bundle will not
+      # have it.
+      - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
+      - NEXT_PUBLIC_CLERK_SIGN_IN_URL=${NEXT_PUBLIC_CLERK_SIGN_IN_URL}
+      - CLERK_JWT_KEY=${CLERK_JWT_KEY:-}
+      - TOKA_ROOT_DOMAIN=${TOKA_ROOT_DOMAIN:-tokadream.com}
+      - TOKA_AUTH_SUBDOMAIN=${TOKA_AUTH_SUBDOMAIN:-accounts}
+      - TOKA_APPS=${TOKA_APPS:-easyjobs}
+      - TOKA_APP_DOMAINS=${TOKA_APP_DOMAINS:-}
       - TZ=${TZ:-America/Edmonton}
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}

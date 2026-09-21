@@ -1,11 +1,11 @@
-import { auth } from "@/auth";
+import { getAuthUserId } from "@/utils/user.utils";
 import { getOllamaBaseUrl } from "@/actions/userSettings.actions";
 import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const userId = await getAuthUserId();
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

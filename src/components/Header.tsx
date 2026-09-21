@@ -10,12 +10,10 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { SIDEBAR_LINKS } from "@/lib/constants";
-import { signOut } from "@/auth";
 import { getCurrentUser } from "@/utils/user.utils";
 import { ProfileDropdown } from "./ProfileDropdown";
 
 async function Header() {
-  // const session = await auth();
   const user = await getCurrentUser();
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
@@ -69,13 +67,7 @@ async function Header() {
         /> */}
       </div>
 
-      <ProfileDropdown
-        user={user}
-        signOutAction={async () => {
-          "use server";
-          await signOut({ redirectTo: "/signin" });
-        }}
-      />
+      <ProfileDropdown user={user} />
     </header>
   );
 }

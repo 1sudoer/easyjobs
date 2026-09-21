@@ -1,11 +1,10 @@
-import { auth } from "@/auth";
+import { getAuthUserId } from "@/utils/user.utils";
 import { NextResponse } from "next/server";
 import { resolveApiKey } from "@/lib/api-key-resolver";
 
 export async function GET() {
   try {
-    const session = await auth();
-    const userId = session?.user?.id;
+    const userId = await getAuthUserId();
 
     const apiKey = await resolveApiKey(userId, "gemini");
 

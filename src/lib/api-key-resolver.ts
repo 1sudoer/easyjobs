@@ -6,7 +6,7 @@ const ENV_KEYS: Record<string, string> = {
 };
 
 export const resolveApiKey = async (
-  _userId: string | undefined,
+  _userId: string | null | undefined,
   provider: string,
 ): Promise<string | null> => {
   const envVar = ENV_KEYS[provider];

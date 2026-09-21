@@ -1,6 +1,7 @@
 import { YogaInitialContext } from 'graphql-yoga'
-import { auth } from '@/auth'
+import { auth } from '@clerk/nextjs/server'
 import prisma from '@/lib/db'
+import { ensureUserWorkspace } from '@/lib/auth/provision'
 
 export type GraphQLContext = {
   prisma: typeof prisma
@@ -9,15 +10,26 @@ export type GraphQLContext = {
 }
 
 export async function createContext(initialContext: YogaInitialContext): Promise<GraphQLContext> {
-  const session = await auth()
   const authHeader = initialContext.request.headers.get('authorization')
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
   const isWebhook =
     !!token && !!process.env.CV_WEBHOOK_SECRET && token === process.env.CV_WEBHOOK_SECRET
 
+  // Webhook callers carry no Clerk session, and this route is public in the
+  // middleware so that they can reach it. Only resolve a session for the
+  // non-webhook case.
+  let userId: string | null = null
+  if (!isWebhook) {
+    const { userId: clerkUserId } = await auth()
+    userId = clerkUserId ?? null
+    if (userId) {
+      await ensureUserWorkspace(userId)
+    }
+  }
+
   return {
     prisma,
-    userId: session?.user?.id ?? null,
+    userId,
     isWebhook,
   }
 }

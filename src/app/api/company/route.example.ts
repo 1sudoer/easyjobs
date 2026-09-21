@@ -4,10 +4,10 @@
 // import "server-only";
 // import prisma from "@/lib/db";
 // import { NextResponse } from "next/server";
-// import { auth } from "@/auth";
+// import { getAuthUserId } from "@/utils/user.utils";
 
 // export const POST = async (req: any) => {
-//   const session = await auth();
+//   const userId = await getAuthUserId();
 //   console.log("SESSION: ", session);
 //   const userId = session?.accessToken.sub;
 //   /* SESSION:  {

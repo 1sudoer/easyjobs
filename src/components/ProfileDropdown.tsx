@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useClerk, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { PowerIcon, Settings, Info } from "lucide-react";
 import { Button } from "./ui/button";
@@ -13,15 +14,21 @@ import {
   DropdownMenuItem,
 } from "./ui/dropdown-menu";
 import UserAvatar from "./UserAvatar";
+import { CurrentUser } from "@/models/user.model";
 import { SupportDialog } from "./SupportDialog";
 
 interface ProfileDropdownProps {
-  user: any;
-  signOutAction: () => void;
+  /** Only used to decide whether to render the avatar at all. */
+  user: CurrentUser | null;
 }
 
-export function ProfileDropdown({ user, signOutAction }: ProfileDropdownProps) {
+export function ProfileDropdown({ user }: ProfileDropdownProps) {
   const [supportDialogOpen, setSupportDialogOpen] = useState(false);
+  const { signOut } = useClerk();
+  // Straight from Clerk, so it reflects a changed email immediately rather
+  // than whatever was copied into a local row at first sign-in.
+  const { user: clerkUser } = useUser();
+  const email = clerkUser?.primaryEmailAddress?.emailAddress;
 
   return (
     <>
@@ -30,7 +37,7 @@ export function ProfileDropdown({ user, signOutAction }: ProfileDropdownProps) {
           <UserAvatar user={user} />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>{user?.email ?? "My Account"}</DropdownMenuLabel>
+          <DropdownMenuLabel>{email ?? "My Account"}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
             <Link href="/dashboard/settings" className="cursor-pointer">
@@ -46,14 +53,15 @@ export function ProfileDropdown({ user, signOutAction }: ProfileDropdownProps) {
             Support
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <form action={signOutAction}>
-            <DropdownMenuItem>
-              <Button variant="ghost" className="w-full">
-                <PowerIcon className="w-5" />
-                <span className="hidden md:block mx-2">Logout</span>
-              </Button>
-            </DropdownMenuItem>
-          </form>
+          <DropdownMenuItem
+            onClick={() => signOut({ redirectUrl: "/" })}
+            className="cursor-pointer"
+          >
+            <Button variant="ghost" className="w-full">
+              <PowerIcon className="w-5" />
+              <span className="hidden md:block mx-2">Logout</span>
+            </Button>
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 

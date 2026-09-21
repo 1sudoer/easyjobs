@@ -13,56 +13,31 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-model User {
-  id           String         @id @default(uuid())
-  name         String
-  email        String         @unique
-  password     String
-  createdAt    DateTime       @default(now())
-  jobsApplied  Job[]
-  JobTitle     JobTitle[]
-  Location     Location[]
-  Company      Company[]
-  JobSource    JobSource[]
-  Contact      Contact[]
-  Activity     Activity[]
-  ActivityType ActivityType[]
-  Settings     UserSettings?
-  Tag          Tag[]
-  Question     Question[]
-  jobPosts     JobPost[]
-  jobProfiles  JobProfile[]
-  jobApplications JobApplication[]
-  resumes      Resume[]
-}
-
 model UserSettings {
   id        String   @id @default(uuid())
   userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id])
   settings  String   @default("{}")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Resume {
-  id             String          @id @default(uuid())
-  userId         String
-  user           User            @relation(fields: [userId], references: [id])
-  jobProfileId   String?
-  jobProfile     JobProfile?     @relation(fields: [jobProfileId], references: [id], onDelete: SetNull)
-  title          String
-  summary        String?
-  contactInfo    Json?
-  experiences    Json            @default("[]")
-  skills         Json            @default("[]")
-  educations     Json            @default("[]")
-  certifications Json            @default("[]")
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  Job            Job[]
+  id              String           @id @default(uuid())
+  userId          String
+  jobProfileId    String?
+  jobProfile      JobProfile?      @relation(fields: [jobProfileId], references: [id], onDelete: SetNull)
+  title           String
+  summary         String?
+  contactInfo     Json?
+  experiences     Json             @default("[]")
+  skills          Json             @default("[]")
+  educations      Json             @default("[]")
+  certifications  Json             @default("[]")
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  Job             Job[]
   jobApplications JobApplication[]
-  share          ResumeShare?
+  share           ResumeShare?
 
   @@index([userId])
 }
@@ -84,18 +59,16 @@ model Contact {
   email       String
   createdAt   DateTime
   createdBy   String // userId
-  user        User       @relation(fields: [createdBy], references: [id])
   Interview   Interview? @relation(fields: [interviewId], references: [id])
   interviewId String?
 }
 
 model JobTitle {
-  id        String  @id @default(uuid())
+  id        String @id @default(uuid())
   label     String
   value     String
   jobs      Job[]
   createdBy String // userId
-  user      User   @relation(fields: [createdBy], references: [id])
 
   @@unique([value, createdBy])
 }
@@ -115,7 +88,6 @@ model Location {
   country     String?
   jobsApplied Job[]
   createdBy   String // userId
-  user        User   @relation(fields: [createdBy], references: [id])
 
   @@unique([value, createdBy])
 }
@@ -127,7 +99,6 @@ model Company {
   jobsApplied Job[]
   logoUrl     String? // field is optional
   createdBy   String // userId
-  user        User   @relation(fields: [createdBy], references: [id])
 
   @@unique([value, createdBy])
 }
@@ -138,7 +109,6 @@ model JobSource {
   value       String
   jobsApplied Job[]
   createdBy   String // userId
-  user        User   @relation(fields: [createdBy], references: [id])
 
   @@unique([value, createdBy])
 }
@@ -154,7 +124,6 @@ model Interview {
 model Job {
   id          String      @id @default(uuid())
   userId      String
-  User        User        @relation(fields: [userId], references: [id])
   jobUrl      String?
   description String
   jobType     String
@@ -185,7 +154,6 @@ model ActivityType {
   value       String
   description String?
   createdBy   String // userId
-  user        User     @relation(fields: [createdBy], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -197,7 +165,6 @@ model ActivityType {
 model Activity {
   id           String    @id @default(uuid())
   userId       String
-  User         User      @relation(fields: [userId], references: [id])
   activityName String
   startTime    DateTime
   endTime      DateTime?
@@ -211,11 +178,10 @@ model Activity {
 }
 
 model Tag {
-  id        String @id @default(uuid())
+  id        String     @id @default(uuid())
   label     String
   value     String
   createdBy String
-  user      User   @relation(fields: [createdBy], references: [id])
   jobs      Job[]
   questions Question[]
 
@@ -227,7 +193,6 @@ model Question {
   question  String
   answer    String?
   createdBy String
-  user      User     @relation(fields: [createdBy], references: [id])
   tags      Tag[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -240,7 +205,6 @@ model Question {
 model JobPost {
   id           String           @id @default(uuid())
   userId       String
-  user         User             @relation(fields: [userId], references: [id])
   title        String
   description  String
   salary       String?
@@ -270,22 +234,21 @@ model JobPostTag {
 }
 
 model JobProfile {
-  id            String           @id @default(uuid())
-  userId        String
-  user          User             @relation(fields: [userId], references: [id])
-  name          String
-  email         String
-  linkedin      String?
-  phone         String?
-  github        String?
-  address       String?
-  description   String?
-  details       String
-  isDefault     Boolean          @default(false)
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  applications  JobApplication[]
-  resumes       Resume[]
+  id           String           @id @default(uuid())
+  userId       String
+  name         String
+  email        String
+  linkedin     String?
+  phone        String?
+  github       String?
+  address      String?
+  description  String?
+  details      String
+  isDefault    Boolean          @default(false)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  applications JobApplication[]
+  resumes      Resume[]
 
   @@index([userId])
 }
@@ -293,7 +256,6 @@ model JobProfile {
 model JobApplication {
   id                 String                     @id @default(uuid())
   userId             String
-  user               User                       @relation(fields: [userId], references: [id])
   jobPostId          String
   jobPost            JobPost                    @relation(fields: [jobPostId], references: [id])
   jobProfileId       String?
