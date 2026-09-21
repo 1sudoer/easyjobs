@@ -3,7 +3,7 @@ import Papa from "papaparse";
 import { PassThrough } from "node:stream";
 import { getJobsIterator } from "@/actions/job.actions";
 import { format } from "date-fns";
-import { auth } from "@/auth";
+import { getAuthUserId } from "@/utils/user.utils";
 
 const FIELDS: string[] = [
   "index",
@@ -58,8 +58,8 @@ const transformJobData = (
 };
 
 export const POST = async () => {
-  const session = await auth();
-  if (!session) {
+  const userId = await getAuthUserId();
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

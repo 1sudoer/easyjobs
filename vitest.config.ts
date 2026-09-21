@@ -12,17 +12,6 @@ export default defineConfig({
         replacement: path.resolve(__dirname, "./node_modules/@prisma/client"),
       },
       {
-        find: "next-auth/providers/credentials",
-        replacement: path.resolve(
-          __dirname,
-          "./__mocks__/next-auth-providers.ts"
-        ),
-      },
-      {
-        find: /^next-auth$/,
-        replacement: path.resolve(__dirname, "./__mocks__/next-auth.ts"),
-      },
-      {
         find: "server-only",
         replacement: path.resolve(__dirname, "./__mocks__/server-only.ts"),
       },
@@ -45,7 +34,7 @@ export default defineConfig({
     exclude: ["e2e/**", "node_modules/**"],
     server: {
       deps: {
-        inline: [/@prisma/, /next-auth/, /@auth/, /@next/, /jose/],
+        inline: [/@prisma/, /@clerk/, /@next/, /jose/],
       },
     },
   },

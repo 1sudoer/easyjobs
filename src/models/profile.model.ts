@@ -8,6 +8,7 @@ export interface Resume {
   skills?: SkillCategory[];
   experiences?: WorkExperience[];
   educations?: Education[];
+  projects?: Project[];
   certifications?: LicenseOrCertification[];
   createdAt?: Date;
   updatedAt?: Date;
@@ -51,6 +52,18 @@ export interface Education {
   endDate?: string | null;
   cgpa?: string;
   description?: string;
+}
+
+export interface Project {
+  name: string;
+  /** Rich text (HTML), same as WorkExperience/Education descriptions. */
+  description?: string;
+  startDate?: string;
+  endDate?: string | null;
+  current?: boolean;
+  technologies?: string[];
+  url?: string;
+  githubUrl?: string;
 }
 
 export interface LicenseOrCertification {

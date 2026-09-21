@@ -4,6 +4,7 @@ import {
   ContactInfo,
   Education,
   LicenseOrCertification,
+  Project,
   Resume,
   SkillCategory,
   WorkExperience,
@@ -14,6 +15,7 @@ import ContactInfoCard from "./ContactInfoCard";
 import SummarySectionCard from "./SummarySectionCard";
 import SkillsCard from "./SkillsCard";
 import ExperienceCard from "./ExperienceCard";
+import ProjectCard from "./ProjectCard";
 import EducationCard from "./EducationCard";
 import CertificationCard from "./CertificationCard";
 import AddContactInfo from "./AddContactInfo";
@@ -26,6 +28,7 @@ type ActiveForm =
   | { type: "summary"; index?: undefined }
   | { type: "skills"; index?: number }
   | { type: "experience"; index?: number }
+  | { type: "project"; index?: number }
   | { type: "education"; index?: number }
   | { type: "certification"; index?: number };
 
@@ -49,12 +52,14 @@ export function ResumeEditorPanel({
     if (localResume.summary) s.add("summary");
     if (localResume.skills?.length) s.add("skills");
     if (localResume.experiences?.length) s.add("experience");
+    if (localResume.projects?.length) s.add("project");
     if (localResume.educations?.length) s.add("education");
     if (localResume.certifications?.length) s.add("certification");
     return s;
   });
 
-  const { contactInfo, summary, skills, experiences, educations, certifications } = localResume;
+  const { contactInfo, summary, skills, experiences, projects, educations, certifications } =
+    localResume;
 
   const addSection = (section: SectionKey) =>
     setAddedSections((prev) => new Set([...prev, section]));
@@ -173,6 +178,15 @@ export function ResumeEditorPanel({
             resumeId={resumeId ?? ""}
             experiences={experiences ?? []}
             onLocalChange={(exps: WorkExperience[]) => updateLocal({ experiences: exps })}
+          />
+        )}
+
+        {/* Projects */}
+        {addedSections.has("project") && (
+          <ProjectCard
+            resumeId={resumeId ?? ""}
+            projects={projects ?? []}
+            onLocalChange={(next: Project[]) => updateLocal({ projects: next })}
           />
         )}
 

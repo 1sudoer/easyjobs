@@ -60,7 +60,6 @@ export function ProfileInfoTab({ profile }: Props) {
           github: data.github || null,
           address: data.address || null,
           description: data.description || null,
-          details: data.details || null,
         },
       },
     })
@@ -101,8 +100,8 @@ export function ProfileInfoTab({ profile }: Props) {
         <Textarea {...register('description')} rows={3} placeholder="Brief professional summary for this profile..." />
       </div>
       <div className="grid gap-1.5">
-        <Label>Details <span className="text-xs text-muted-foreground font-normal">(optional)</span></Label>
-        <Textarea {...register('details')} rows={5} placeholder="Additional details, notes, or context for this profile..." />
+        <Label>Details *</Label>
+        <Textarea {...register('details', { required: true })} rows={5} placeholder="Additional details, notes, or context for this profile..." />
       </div>
       <div className="flex items-center gap-2">
         <Switch id="isDefault" checked={watch('isDefault')} onCheckedChange={(v) => setValue('isDefault', v, { shouldDirty: true })} />

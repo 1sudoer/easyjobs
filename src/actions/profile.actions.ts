@@ -4,6 +4,7 @@ import { handleError } from "@/lib/utils";
 import { AddEducationFormSchema } from "@/models/AddEductionForm.schema";
 import { AddContactInfoFormSchema } from "@/models/addContactInfoForm.schema";
 import { AddCertificationFormSchema } from "@/models/addCertificationForm.schema";
+import { AddProjectFormSchema } from "@/models/addProjectForm.schema";
 import { AddExperienceFormSchema } from "@/models/addExperienceForm.schema";
 import { AddSummarySectionFormSchema } from "@/models/addSummaryForm.schema";
 import { AddSkillsFormSchema } from "@/models/addSkillsForm.schema";
@@ -552,6 +553,111 @@ export const deleteCertification = async (
   }
 };
 
+// ─── Projects ────────────────────────────────────────────────────────────────
+
+/** The form takes technologies as a comma-separated string; store an array. */
+const parseTechnologies = (value: string | undefined): string[] =>
+  (value ?? "")
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0);
+
+const toProject = (data: z.infer<typeof AddProjectFormSchema>) => ({
+  name: data.name,
+  description: data.description,
+  startDate: data.startDate || null,
+  endDate: data.endDate || null,
+  current: data.current ?? false,
+  technologies: parseTechnologies(data.technologies),
+  url: data.url || null,
+  githubUrl: data.githubUrl || null,
+});
+
+export const addProject = async (
+  data: z.infer<typeof AddProjectFormSchema>,
+): Promise<any | undefined> => {
+  try {
+    const user = await getCurrentUser();
+    if (!user) throw new Error("Not authenticated");
+
+    const resume = await prisma.resume.findUnique({
+      where: { id: data.resumeId, userId: user.id },
+      select: { projects: true },
+    });
+    if (!resume) throw new Error("Resume not found");
+
+    const newProject = toProject(data);
+    const updated = [...((resume.projects as any[]) ?? []), newProject];
+
+    await prisma.resume.update({
+      where: { id: data.resumeId },
+      data: { projects: updated },
+    });
+    revalidatePath(`/dashboard/profile/resume/${data.resumeId}`);
+    return { data: newProject, success: true };
+  } catch (error) {
+    return handleError(error, "Failed to create project.");
+  }
+};
+
+export const updateProject = async (
+  data: z.infer<typeof AddProjectFormSchema>,
+): Promise<any | undefined> => {
+  try {
+    const user = await getCurrentUser();
+    if (!user) throw new Error("Not authenticated");
+    if (data.index === undefined) throw new Error("Project index is required");
+
+    const resume = await prisma.resume.findUnique({
+      where: { id: data.resumeId, userId: user.id },
+      select: { projects: true },
+    });
+    if (!resume) throw new Error("Resume not found");
+
+    const projects = (resume.projects as any[]) ?? [];
+    if (!projects[data.index]) throw new Error("Project not found");
+
+    const updatedProject = toProject(data);
+    const updated = projects.map((project: any, i: number) =>
+      i === data.index ? updatedProject : project,
+    );
+
+    await prisma.resume.update({
+      where: { id: data.resumeId },
+      data: { projects: updated },
+    });
+    revalidatePath(`/dashboard/profile/resume/${data.resumeId}`);
+    return { data: updatedProject, success: true };
+  } catch (error) {
+    return handleError(error, "Failed to update project.");
+  }
+};
+
+export const deleteProject = async (
+  index: number,
+  resumeId: string,
+): Promise<any | undefined> => {
+  try {
+    const user = await getCurrentUser();
+    if (!user) throw new Error("Not authenticated");
+
+    const resume = await prisma.resume.findUnique({
+      where: { id: resumeId, userId: user.id },
+      select: { projects: true },
+    });
+    if (!resume) throw new Error("Resume not found");
+
+    const updated = ((resume.projects as any[]) ?? []).filter(
+      (_: any, i: number) => i !== index,
+    );
+    await prisma.resume.update({ where: { id: resumeId }, data: { projects: updated } });
+    revalidatePath(`/dashboard/profile/resume/${resumeId}`);
+    return { success: true };
+  } catch (error) {
+    return handleError(error, "Failed to delete project.");
+  }
+};
+
 // ─── Resume application insights ─────────────────────────────────────────────
 
 export const getResumeApplications = async (resumeId: string): Promise<any | undefined> => {
@@ -659,6 +765,7 @@ export const saveFullResume = async (resume: Resume): Promise<any | undefined> =
         skills: (resume.skills as any) ?? [],
         experiences: (resume.experiences as any) ?? [],
         educations: (resume.educations as any) ?? [],
+        projects: (resume.projects as any) ?? [],
         certifications: (resume.certifications as any) ?? [],
       },
     });

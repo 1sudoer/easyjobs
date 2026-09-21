@@ -1,19 +1,11 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
-import db from "@/lib/db";
 
+/**
+ * The middleware already requires a session to reach this route, so anyone who
+ * gets here is signed in and belongs on the dashboard. The old first-run
+ * branch (no users yet -> /signup) is gone: accounts are created on the central
+ * Toka auth app, and the local `User` row is provisioned on first request.
+ */
 export default async function RootPage() {
-  const session = await auth();
-
-  if (session?.user) {
-    redirect("/dashboard");
-  }
-
-  const userCount = await db.user.count();
-
-  if (userCount === 0) {
-    redirect("/signup");
-  } else {
-    redirect("/signin");
-  }
+  redirect("/dashboard");
 }

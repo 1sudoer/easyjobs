@@ -1,7 +1,7 @@
 "use client";
 import { memo } from "react";
 import { PDFViewer } from "@react-pdf/renderer";
-import { ResumeDocumentData, ResumeHtmlNodes } from "./generateResumePdf";
+import type { ResumeDocumentData, ResumeHtmlNodes } from "./types";
 import { ProfessionalResumeDocument } from "./ProfessionalTemplate";
 
 interface Props {

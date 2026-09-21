@@ -5,7 +5,6 @@ import { getCurrentUser } from "@/utils/user.utils";
 import {
   UserSettingsData,
   defaultUserSettings,
-  AiSettings,
   DisplaySettings,
 } from "@/models/userSettings.model";
 
@@ -73,11 +72,6 @@ export const updateUserSettings = async (
         ...defaultUserSettings,
         ...currentSettings,
         ...settings,
-        ai: {
-          ...defaultUserSettings.ai,
-          ...currentSettings.ai,
-          ...settings.ai,
-        },
         display: {
           ...defaultUserSettings.display,
           ...currentSettings.display,
@@ -88,7 +82,6 @@ export const updateUserSettings = async (
       mergedSettings = {
         ...defaultUserSettings,
         ...settings,
-        ai: { ...defaultUserSettings.ai, ...settings.ai },
         display: { ...defaultUserSettings.display, ...settings.display },
       };
     }
@@ -119,29 +112,8 @@ export const updateUserSettings = async (
   }
 };
 
-export const updateAiSettings = async (
-  aiSettings: AiSettings
-): Promise<any | undefined> => {
-  return updateUserSettings({ ai: aiSettings });
-};
-
 export const updateDisplaySettings = async (
   displaySettings: DisplaySettings
 ): Promise<any | undefined> => {
   return updateUserSettings({ display: displaySettings });
 };
-
-export const getOllamaBaseUrl = async (): Promise<string> => {
-  const envUrl = process.env.OLLAMA_BASE_URL
-  if (envUrl) return envUrl.replace(/\/+$/, '')
-
-  try {
-    const result = await getUserSettings()
-    const url = result?.data?.settings?.ai?.ollamaBaseUrl
-    if (url) return (url as string).replace(/\/+$/, '')
-  } catch {
-    // fall through to default
-  }
-
-  return 'http://localhost:11434'
-}

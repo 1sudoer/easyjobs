@@ -4,6 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ApolloProvider } from "@/components/providers/ApolloProvider";
+import { TokaAuthProvider } from "@toka-auth/kit";
 
 export const dynamic = "force-dynamic";
 
@@ -33,16 +34,18 @@ export default function RootLayout({ children }: Readonly<Props>) {
           inter.variable
         )}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <ApolloProvider>
-            {children}
-          </ApolloProvider>
-        </ThemeProvider>
+        <TokaAuthProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <ApolloProvider>
+              {children}
+            </ApolloProvider>
+          </ThemeProvider>
+        </TokaAuthProvider>
       </body>
     </html>
   );
