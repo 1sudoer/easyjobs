@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { Download, Loader } from "lucide-react";
 import { Resume } from "@/models/profile.model";
-import type { ResumeDocumentData, ResumeHtmlNodes } from "./resume-pdf/generateResumePdf";
+import type { ResumeDocumentData, ResumeHtmlNodes } from "./resume-pdf/types";
 import { Button } from "../ui/button";
 import { generateResumePdfBlob } from "./resume-pdf/generateResumePdf";
 import { toast } from "../ui/use-toast";
@@ -44,18 +44,8 @@ export function PublicResumeView({ resume }: PublicResumeViewProps) {
   ].join("\0");
 
   useEffect(() => {
-    import("./resume-pdf/html-to-pdf").then(({ htmlToPdfNodes }) => {
-      setHtmlNodes({
-        summary: resume.summary ? htmlToPdfNodes(resume.summary) : [],
-        experiences:
-          resume.experiences?.map((e) =>
-            e.description ? htmlToPdfNodes(e.description) : [],
-          ) ?? [],
-        educations:
-          resume.educations?.map((e) =>
-            e.description ? htmlToPdfNodes(e.description) : [],
-          ) ?? [],
-      });
+    import("./resume-pdf/html-to-pdf").then(({ buildResumeHtmlNodes }) => {
+      setHtmlNodes(buildResumeHtmlNodes(documentData));
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resume.id, contentKey]);
