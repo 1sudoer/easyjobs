@@ -12,10 +12,6 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@ai-sdk/deepseek": "^2.0.4",
-    "@ai-sdk/google": "^3.0.53",
-    "@ai-sdk/openai": "^3.0.2",
-    "@ai-sdk/react": "^3.0.5",
     "@apollo/client": "^4.2.3",
     "@clerk/nextjs": "^7.5.20",
     "@graphql-tools/schema": "^10.0.33",
@@ -53,7 +49,6 @@
     "@toka-auth/config": "^0.1.0",
     "@toka-auth/kit": "^0.1.0",
     "@types/amqplib": "^0.10.8",
-    "ai": "^6.0.5",
     "amqplib": "^2.0.1",
     "bullmq": "^5.78.1",
     "class-variance-authority": "^0.7.0",
@@ -66,7 +61,6 @@
     "lucide-react": "^0.469.0",
     "next": "^15.5.18",
     "next-themes": "^0.4.4",
-    "ollama-ai-provider-v2": "^2.0.0",
     "papaparse": "^5.4.1",
     "react": "19.2.4",
     "react-day-picker": "^9.12.0",

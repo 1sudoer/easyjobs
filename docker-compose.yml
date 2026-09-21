@@ -8,7 +8,6 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=${DATABASE_URL}
       - DIRECT_URL=${DIRECT_URL}
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-you-encryption-key-here}
       # --- Toka Auth / Clerk (replaces next-auth) ---
       # NOTE: NEXT_PUBLIC_* are inlined at BUILD time by Next.js. Setting them
       # here only reaches server-side code; a prebuilt image needs the
@@ -23,12 +22,6 @@ services:
       - TOKA_APPS=${TOKA_APPS:-easyjobs}
       - TOKA_APP_DOMAINS=${TOKA_APP_DOMAINS:-}
       - TZ=${TZ:-America/Edmonton}
-      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
-      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
-      - RAPIDAPI_KEY=${RAPIDAPI_KEY:-}
       - LAVINMQ_URL=${LAVINMQ_URL}
     extra_hosts:
       - "host.docker.internal:host-gateway"
