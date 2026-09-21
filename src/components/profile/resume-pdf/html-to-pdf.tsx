@@ -419,5 +419,9 @@ export function buildResumeHtmlNodes(
       data.educations?.map((education) =>
         education.description ? htmlToPdfNodes(education.description, theme) : [],
       ) ?? [],
+    projects:
+      data.projects?.map((project) =>
+        project.description ? htmlToPdfNodes(project.description, theme) : [],
+      ) ?? [],
   };
 }

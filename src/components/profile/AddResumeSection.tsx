@@ -14,6 +14,7 @@ export type SectionKey =
   | "summary"
   | "skills"
   | "experience"
+  | "project"
   | "education"
   | "certification";
 
@@ -62,6 +63,13 @@ function AddResumeSection({ addedSections, onOpen }: AddResumeSectionProps) {
             disabled={addedSections.has("experience")}
           >
             Add Experience
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="cursor-pointer"
+            onClick={() => onOpen("project")}
+            disabled={addedSections.has("project")}
+          >
+            Add Project
           </DropdownMenuItem>
           <DropdownMenuItem
             className="cursor-pointer"

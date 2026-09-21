@@ -220,6 +220,7 @@ export const jobApplicationResolvers = {
                 experiences: source.experiences,
                 skills: source.skills,
                 educations: source.educations,
+                projects: source.projects,
                 certifications: source.certifications,
               },
             })

@@ -11,6 +11,7 @@ import type {
   ContactInfo,
   Education,
   LicenseOrCertification,
+  Project,
   SkillCategory,
   WorkExperience,
 } from "@/models/profile.model";
@@ -189,6 +190,48 @@ const ExperienceSection = memo(function ExperienceSection({
   );
 });
 
+const ProjectsSection = memo(function ProjectsSection({
+  projects,
+  nodes,
+  theme,
+}: {
+  projects: Project[] | undefined;
+  nodes: React.ReactElement[][];
+  theme: ResumeTheme;
+}) {
+  const { styles } = theme;
+  if (!projects?.length) return null;
+
+  return (
+    <View>
+      <SectionHeading title="Projects" theme={theme} />
+      {projects.map((project, i) => {
+        const links = metaLine([project.url, project.githubUrl]);
+        return (
+          <View key={i} style={styles.entry}>
+            <EntryHeader
+              theme={theme}
+              title={project.name}
+              meta={[
+                metaLine([
+                  dateRange(project.startDate, project.endDate, project.current),
+                  links,
+                ]),
+              ].filter(Boolean)}
+            />
+            {project.technologies?.length ? (
+              <Text style={styles.projectTech}>
+                {project.technologies.join(", ")}
+              </Text>
+            ) : null}
+            {nodes[i]}
+          </View>
+        );
+      })}
+    </View>
+  );
+});
+
 const EducationSection = memo(function EducationSection({
   educations,
   nodes,
@@ -281,7 +324,8 @@ export function ProfessionalResumeDocument({
   htmlNodes,
   theme = defaultResumeTheme,
 }: Props) {
-  const { contactInfo, skills, experiences, educations, certifications } = resume;
+  const { contactInfo, skills, experiences, educations, projects, certifications } =
+    resume;
 
   return (
     <Document
@@ -298,6 +342,11 @@ export function ProfessionalResumeDocument({
         <ExperienceSection
           experiences={experiences}
           nodes={htmlNodes.experiences}
+          theme={theme}
+        />
+        <ProjectsSection
+          projects={projects}
+          nodes={htmlNodes.projects}
           theme={theme}
         />
         <EducationSection

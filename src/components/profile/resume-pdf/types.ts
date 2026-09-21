@@ -4,7 +4,13 @@ import type { Resume } from "@/models/profile.model";
 /** The subset of a resume the PDF actually renders — no title, ids or timestamps. */
 export type ResumeDocumentData = Pick<
   Resume,
-  "summary" | "contactInfo" | "skills" | "experiences" | "educations" | "certifications"
+  | "summary"
+  | "contactInfo"
+  | "skills"
+  | "experiences"
+  | "educations"
+  | "projects"
+  | "certifications"
 >;
 
 /**
@@ -15,4 +21,5 @@ export type ResumeHtmlNodes = {
   summary: ReactElement[];
   experiences: ReactElement[][];
   educations: ReactElement[][];
+  projects: ReactElement[][];
 };

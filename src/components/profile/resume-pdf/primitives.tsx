@@ -183,6 +183,13 @@ export function createResumeStyles(
       marginBottom: 2,
     },
     skillRow: { marginBottom: skillSpacing },
+    /** Technologies line under a project title. */
+    projectTech: {
+      fontSize: metaFontSize,
+      fontFamily: "Helvetica-Bold",
+      color: metaColor,
+      marginBottom: 2,
+    },
     certification: { marginBottom: certificationSpacing },
     list: { marginBottom: listSpacing },
     listRow: {

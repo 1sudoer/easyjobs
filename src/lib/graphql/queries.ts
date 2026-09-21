@@ -392,6 +392,7 @@ const RESUME_DRAFT_FIELDS = /* GraphQL */ `
   skills
   experiences
   educations
+  projects
   certifications
   createdAt
   updatedAt
