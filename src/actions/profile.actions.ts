@@ -728,6 +728,10 @@ export const getResumeShareStatus = async (resumeId: string): Promise<any | unde
     const user = await getCurrentUser();
     if (!user) throw new Error("Not authenticated");
 
+    // The token is the only thing guarding the public /cv link: owner only.
+    const owned = await prisma.resume.findUnique({ where: { id: resumeId, userId: user.id }, select: { id: true } });
+    if (!owned) throw new Error("Resume not found");
+
     const share = await prisma.resumeShare.findUnique({ where: { resumeId } });
     return { success: true, data: share ? { shared: true, token: share.token } : { shared: false } };
   } catch (error) {
@@ -738,9 +742,25 @@ export const getResumeShareStatus = async (resumeId: string): Promise<any | unde
 export const getResumeByShareToken = async (token: string): Promise<any | undefined> => {
   try {
     if (!token) throw new Error("Token is required");
+    // Public, unauthenticated read: return only what the CV renders, not
+    // internal ids (userId, jobProfileId) or timestamps.
     const share = await prisma.resumeShare.findUnique({
       where: { token },
-      include: { resume: true },
+      select: {
+        resume: {
+          select: {
+            id: true,
+            title: true,
+            summary: true,
+            contactInfo: true,
+            experiences: true,
+            skills: true,
+            educations: true,
+            projects: true,
+            certifications: true,
+          },
+        },
+      },
     });
     if (!share) return { success: false, data: null };
     return { success: true, data: share.resume };
