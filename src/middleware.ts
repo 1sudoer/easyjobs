@@ -12,9 +12,13 @@ import { getTokaConfig } from "@/lib/auth/toka";
  * `/api/graphql` is left public here because it authenticates itself: it serves
  * both session-backed requests and webhook calls bearing CV_WEBHOOK_SECRET, and
  * resolves the caller in `src/graphql/context.ts`.
+ *
+ * `/cv/<token>` is the "Share a CV" link and must open without signing in. The
+ * unguessable share token is the access check (`getResumeByShareToken`), and
+ * unsharing deletes it.
  */
 export default createAuthMiddleware(getTokaConfig(), {
-  publicRoutes: ["/api/graphql(.*)"],
+  publicRoutes: ["/api/graphql(.*)", "/cv/(.*)"],
 });
 
 export const config = {
