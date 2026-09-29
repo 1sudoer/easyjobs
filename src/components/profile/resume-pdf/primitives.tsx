@@ -1,68 +1,69 @@
-import { StyleSheet, Text, View, ViewProps } from "@react-pdf/renderer";
+import type React from "react";
+import { StyleSheet, Text } from "@react-pdf/renderer";
 
 /**
  * Every visual value of the resume document lives here so the whole template is
  * driven by one settings object. Only the defaults are used today; exposing them
  * per resume later means passing a partial override to `createResumeTheme`.
+ *
+ * The defaults follow the conventional US resume: US Letter, half-inch margins,
+ * a single column in 10pt Helvetica, a centered name over one contact line, and
+ * uppercase section titles over a thin rule.
  */
 export type ResumeDocumentSettings = {
-  /** Page default size — text without an explicit size inherits this. */
-  basePageFontSize: number;
-  /** Size of body copy: paragraphs, bullets, skills. */
+  /** Size of body copy: paragraphs, bullets, skills, entry lines. */
   documentFontSize: number;
   documentLineHeight: number;
   documentMarginVertical: number;
   documentMarginHorizontal: number;
   textColor: string;
+  /** Secondary text: contact line, locations, links. */
   metaColor: string;
-  metaFontSize: number;
+  ruleColor: string;
   headerNameSize: number;
   headerNameBottomSpacing: number;
   headerHeadlineSize: number;
   headerBottomSpacing: number;
   sectionTitleSize: number;
   sectionTitleLetterSpacing: number;
-  sectionTitleMarginTop: number;
-  sectionTitleMarginBottom: number;
-  dividerMarginBottom: number;
+  sectionSpacing: number;
+  sectionTitleBottomSpacing: number;
   /** Space below a paragraph inside rich-text content. */
   paragraphSpacing: number;
-  /** Size of an `<h2>` coming from rich-text content. */
+  /** Size of a heading coming from rich-text content. */
   richHeadingSize: number;
-  listSpacing: number;
-  listRowSpacing: number;
+  listIndent: number;
   listMarkerWidth: number;
+  listRowSpacing: number;
   entrySpacing: number;
+  entryHeaderBottomSpacing: number;
   skillSpacing: number;
-  certificationSpacing: number;
 };
 
 export const DEFAULT_DOCUMENT_SETTINGS: ResumeDocumentSettings = {
-  basePageFontSize: 9,
-  documentFontSize: 11,
-  documentLineHeight: 1.4,
-  documentMarginVertical: 30,
-  documentMarginHorizontal: 20,
-  textColor: "#000000",
-  metaColor: "#444444",
-  metaFontSize: 10,
-  headerNameSize: 20,
-  headerNameBottomSpacing: 8,
-  headerHeadlineSize: 12,
-  headerBottomSpacing: 12,
-  sectionTitleSize: 11,
-  sectionTitleLetterSpacing: 0.8,
-  sectionTitleMarginTop: 12,
-  sectionTitleMarginBottom: 3,
-  dividerMarginBottom: 6,
+  documentFontSize: 10,
+  documentLineHeight: 1.3,
+  documentMarginVertical: 36,
+  documentMarginHorizontal: 36,
+  textColor: "#111827",
+  metaColor: "#374151",
+  ruleColor: "#111827",
+  headerNameSize: 22,
+  headerNameBottomSpacing: 4,
+  headerHeadlineSize: 11,
+  headerBottomSpacing: 4,
+  sectionTitleSize: 10.5,
+  sectionTitleLetterSpacing: 0.6,
+  sectionSpacing: 8,
+  sectionTitleBottomSpacing: 4,
   paragraphSpacing: 2,
-  richHeadingSize: 13,
-  listSpacing: 2,
-  listRowSpacing: 1,
-  listMarkerWidth: 14,
-  entrySpacing: 8,
-  skillSpacing: 3,
-  certificationSpacing: 6,
+  richHeadingSize: 10,
+  listIndent: 8,
+  listMarkerWidth: 10,
+  listRowSpacing: 1.5,
+  entrySpacing: 6,
+  entryHeaderBottomSpacing: 2,
+  skillSpacing: 1.5,
 };
 
 /**
@@ -71,143 +72,146 @@ export const DEFAULT_DOCUMENT_SETTINGS: ResumeDocumentSettings = {
  * room than this the element moves to the next page instead of being orphaned at
  * the bottom of the current one.
  *
- * Nothing here ever prevents a *block* from splitting — that is what broke the
- * previous template, which used `wrap={false}` and so could not render an entry
- * taller than the space left on the page.
+ * Nothing here ever prevents a *block* from splitting — an entry taller than the
+ * space left on the page must still be able to continue onto the next one.
  */
 export type ResumeBreakBudget = {
   /** Keeps a section title from landing alone under the last line of a page. */
   sectionHeading: number;
   /** Keeps an entry's title/meta lines attached to its first line of content. */
   entryHeader: number;
-  /** Keeps a bullet from starting on the very last line of a page. */
+  /**
+   * Room the next bullet must have after each bullet. Zero by default: any
+   * positive budget pushes a complete one-line bullet onto the next page and
+   * leaves a gap at the bottom of every page. A multi-line bullet is already
+   * kept from splitting into a single stranded line by `orphans`/`widows`.
+   */
   listRow: number;
 };
 
 export const DEFAULT_BREAK_BUDGET: ResumeBreakBudget = {
-  sectionHeading: 60,
-  entryHeader: 44,
-  listRow: 18,
+  sectionHeading: 48,
+  entryHeader: 28,
+  listRow: 0,
 };
 
 export function createResumeStyles(
   settings: ResumeDocumentSettings = DEFAULT_DOCUMENT_SETTINGS,
 ) {
   const {
-    basePageFontSize,
     documentFontSize,
     documentLineHeight,
     documentMarginVertical,
     documentMarginHorizontal,
     textColor,
     metaColor,
-    metaFontSize,
+    ruleColor,
     headerNameSize,
     headerNameBottomSpacing,
     headerHeadlineSize,
     headerBottomSpacing,
     sectionTitleSize,
     sectionTitleLetterSpacing,
-    sectionTitleMarginTop,
-    sectionTitleMarginBottom,
-    dividerMarginBottom,
+    sectionSpacing,
+    sectionTitleBottomSpacing,
     paragraphSpacing,
     richHeadingSize,
-    listSpacing,
-    listRowSpacing,
+    listIndent,
     listMarkerWidth,
+    listRowSpacing,
     entrySpacing,
+    entryHeaderBottomSpacing,
     skillSpacing,
-    certificationSpacing,
   } = settings;
 
   return StyleSheet.create({
     page: {
       fontFamily: "Helvetica",
-      fontSize: basePageFontSize,
+      fontSize: documentFontSize,
       paddingTop: documentMarginVertical,
       paddingBottom: documentMarginVertical,
       paddingHorizontal: documentMarginHorizontal,
       color: textColor,
       lineHeight: documentLineHeight,
     },
+    // Header: centered name, optional headline, one wrapped contact line.
     header: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "flex-start",
+      alignItems: "center",
       marginBottom: headerBottomSpacing,
     },
-    headerIdentity: { flexShrink: 1, paddingRight: 12 },
-    headerContact: { alignItems: "flex-end", flexShrink: 0 },
-    heading: {
+    name: {
       fontSize: headerNameSize,
       fontFamily: "Helvetica-Bold",
+      lineHeight: 1.15,
+      textAlign: "center",
       marginBottom: headerNameBottomSpacing,
     },
-    subheading: {
+    headline: {
       fontSize: headerHeadlineSize,
+      textAlign: "center",
       marginBottom: 2,
     },
     contactLine: {
-      fontSize: metaFontSize,
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "center",
+      fontSize: documentFontSize,
       color: metaColor,
-      marginBottom: 2,
     },
+    contactItem: { color: metaColor, textDecoration: "none" },
+    separator: { color: metaColor, marginHorizontal: 5 },
+    // Sections
     sectionTitle: {
+      marginTop: sectionSpacing,
       fontSize: sectionTitleSize,
       fontFamily: "Helvetica-Bold",
       textTransform: "uppercase",
       letterSpacing: sectionTitleLetterSpacing,
-      marginBottom: sectionTitleMarginBottom,
-      marginTop: sectionTitleMarginTop,
-    },
-    divider: {
-      borderBottomWidth: 0.5,
-      borderBottomColor: textColor,
-      marginBottom: dividerMarginBottom,
+      paddingBottom: 1,
+      borderBottomWidth: 0.75,
+      borderBottomColor: ruleColor,
+      marginBottom: sectionTitleBottomSpacing,
     },
     bold: { fontFamily: "Helvetica-Bold" },
+    italic: { fontFamily: "Helvetica-Oblique" },
     bodyText: {
       fontSize: documentFontSize,
       marginBottom: paragraphSpacing,
     },
-    entry: { marginBottom: entrySpacing },
-    entryTitle: {
-      fontFamily: "Helvetica-Bold",
-      fontSize: documentFontSize,
-      marginBottom: 1,
+    // Entries: a two-column header (title left, date right) over the details.
+    entryHeader: { marginBottom: entryHeaderBottomSpacing },
+    /** Every entry but the first, so the last one adds no gap before the next section. */
+    entryHeaderFollowing: {
+      marginTop: entrySpacing,
+      marginBottom: entryHeaderBottomSpacing,
     },
-    entryMeta: {
-      fontSize: metaFontSize,
-      color: metaColor,
-      marginBottom: 2,
+    entryRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "flex-start",
     },
+    entryLeft: { flex: 1, paddingRight: 12 },
+    entryRight: { flexShrink: 0, textAlign: "right" },
+    entryTitle: { fontFamily: "Helvetica-Bold" },
+    entrySubtitle: {},
+    entryMeta: { color: metaColor },
+    link: { color: metaColor, textDecoration: "none" },
     skillRow: { marginBottom: skillSpacing },
-    /** Technologies line under a project title. */
-    projectTech: {
-      fontSize: metaFontSize,
-      fontFamily: "Helvetica-Bold",
-      color: metaColor,
-      marginBottom: 2,
-    },
-    certification: { marginBottom: certificationSpacing },
-    list: { marginBottom: listSpacing },
+    // Rich text
+    list: { paddingLeft: listIndent },
     listRow: {
       flexDirection: "row",
       marginBottom: listRowSpacing,
     },
-    bullet: {
-      width: listMarkerWidth,
-      fontSize: documentFontSize,
-    },
+    bullet: { width: listMarkerWidth },
     /** Column that holds a list item's blocks, so nested lists work. */
     listBody: { flex: 1 },
     listText: { fontSize: documentFontSize },
     h2text: {
       fontFamily: "Helvetica-Bold",
       fontSize: richHeadingSize,
-      marginBottom: sectionTitleMarginBottom,
-      marginTop: 4,
+      marginBottom: 1,
+      marginTop: 2,
     },
     blockquote: {
       borderLeftWidth: 1.5,
@@ -256,18 +260,31 @@ export function createResumeTheme(
 
 export const defaultResumeTheme: ResumeTheme = createResumeTheme();
 
-export function SectionHeading({
+/**
+ * A section: its ruled title followed by content that is free to split across
+ * pages. Rendered as a fragment, not a wrapping `View`, because react-pdf only
+ * honours `minPresenceAhead` for an element that has earlier siblings in its
+ * container — as the first child of its own `View` the title could never move
+ * to the next page.
+ */
+export function Section({
   title,
   theme = defaultResumeTheme,
-  ...viewProps
-}: { title: string; theme?: ResumeTheme } & ViewProps) {
+  children,
+}: {
+  title: string;
+  theme?: ResumeTheme;
+  children?: React.ReactNode;
+}) {
   return (
-    <View minPresenceAhead={theme.breaks.sectionHeading} {...viewProps}>
-      {/* Title plus rule is two short lines, so keeping them together is safe. */}
-      <View wrap={false}>
-        <Text style={theme.styles.sectionTitle}>{title}</Text>
-        <View style={theme.styles.divider} />
-      </View>
-    </View>
+    <>
+      <Text
+        style={theme.styles.sectionTitle}
+        minPresenceAhead={theme.breaks.sectionHeading}
+      >
+        {title}
+      </Text>
+      {children}
+    </>
   );
 }
