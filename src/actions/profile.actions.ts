@@ -758,6 +758,7 @@ export const getResumeByShareToken = async (token: string): Promise<any | undefi
             educations: true,
             projects: true,
             certifications: true,
+            sectionOrder: true,
           },
         },
       },
@@ -787,6 +788,7 @@ export const saveFullResume = async (resume: Resume): Promise<any | undefined> =
         educations: (resume.educations as any) ?? [],
         projects: (resume.projects as any) ?? [],
         certifications: (resume.certifications as any) ?? [],
+        sectionOrder: resume.sectionOrder ?? [],
       },
     });
     revalidatePath(`/dashboard/profile/resume/${resume.id}`);

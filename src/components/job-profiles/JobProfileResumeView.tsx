@@ -18,7 +18,8 @@ import { ArrowLeft, Loader, PanelRightClose, PanelRightOpen, RotateCcw, Save, Tr
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Resume } from '@/models/profile.model'
-import { ResumePdfPanel } from '@/components/profile/ResumePdfPanel'
+import { ResumePreviewPanel } from '@/components/profile/resume-preview'
+import { DownloadResumeButton } from '@/components/profile/resume-pdf/DownloadResumeButton'
 import { ResumeEditorPanel } from '@/components/profile/ResumeEditorPanel'
 import { toast } from '@/components/ui/use-toast'
 import {
@@ -39,7 +40,9 @@ function draftToResume(draft: any): Resume {
     skills: draft.skills ?? [],
     experiences: draft.experiences ?? [],
     educations: draft.educations ?? [],
+    projects: draft.projects ?? [],
     certifications: draft.certifications ?? [],
+    sectionOrder: draft.sectionOrder ?? [],
   }
 }
 
@@ -106,7 +109,9 @@ export function JobProfileResumeView() {
           skills: localResume.skills ?? [],
           experiences: localResume.experiences ?? [],
           educations: localResume.educations ?? [],
+          projects: localResume.projects ?? [],
           certifications: localResume.certifications ?? [],
+          sectionOrder: localResume.sectionOrder ?? [],
         },
       },
     })
@@ -202,6 +207,8 @@ export function JobProfileResumeView() {
           </AlertDialogContent>
         </AlertDialog>
 
+        <DownloadResumeButton resume={localResume} />
+
         <Button
           variant={showEdit ? 'secondary' : 'outline'}
           size="sm"
@@ -215,10 +222,10 @@ export function JobProfileResumeView() {
         </Button>
       </div>
 
-      {/* Split view: PDF preview + editor */}
+      {/* Split view: live preview + editor */}
       <div className="flex gap-4 flex-1 min-h-0">
         <div className="flex-1 min-w-0 min-h-0">
-          <ResumePdfPanel resume={localResume} />
+          <ResumePreviewPanel resume={localResume} />
         </div>
 
         {showEdit && (

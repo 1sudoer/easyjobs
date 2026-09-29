@@ -87,6 +87,7 @@ export const jobProfileResolvers = {
           educations: args.input.educations ?? [],
           projects: args.input.projects ?? [],
           certifications: args.input.certifications ?? [],
+          sectionOrder: args.input.sectionOrder ?? [],
         },
       })
     },
@@ -99,8 +100,17 @@ export const jobProfileResolvers = {
       const userId = requireAuth(ctx.userId)
       const draft = await ctx.prisma.resume.findFirst({ where: { id: args.id, userId } })
       if (!draft) throw new Error('Draft not found')
-      const { title, summary, contactInfo, skills, experiences, educations, projects, certifications } =
-        args.input
+      const {
+        title,
+        summary,
+        contactInfo,
+        skills,
+        experiences,
+        educations,
+        projects,
+        certifications,
+        sectionOrder,
+      } = args.input
       return ctx.prisma.resume.update({
         where: { id: args.id },
         data: {
@@ -112,6 +122,7 @@ export const jobProfileResolvers = {
           ...(educations !== undefined && { educations }),
           ...(projects !== undefined && { projects }),
           ...(certifications !== undefined && { certifications }),
+          ...(sectionOrder !== undefined && { sectionOrder }),
         },
       })
     },

@@ -1,57 +1,28 @@
 import React, { Fragment, memo } from "react";
 import { Document, Font, Link, Page, Text, View } from "@react-pdf/renderer";
-import { format } from "date-fns";
+import {
+  certificationDates,
+  clean,
+  contactItems,
+  dateRange,
+  displayUrl,
+  joinParts,
+  toHref,
+} from "./format";
 import { Section, defaultResumeTheme, type ResumeTheme } from "./primitives";
 import type { ResumeDocumentData, ResumeHtmlNodes } from "./types";
-import type {
-  ContactInfo,
-  Education,
-  LicenseOrCertification,
-  Project,
-  SkillCategory,
-  WorkExperience,
+import {
+  resolveSectionOrder,
+  type ContactInfo,
+  type Education,
+  type LicenseOrCertification,
+  type Project,
+  type ResumeSection,
+  type SkillCategory,
+  type WorkExperience,
 } from "@/models/profile.model";
 
 Font.registerHyphenationCallback((word) => [word]);
-
-function formatDate(date: Date | string | undefined | null): string | null {
-  if (!date) return null;
-  const parsed = new Date(date);
-  return Number.isNaN(parsed.getTime()) ? String(date) : format(parsed, "MMM yyyy");
-}
-
-function dateRange(start?: string | null, end?: string | null, ongoing?: boolean): string {
-  const from = start?.trim();
-  const to = ongoing || !end?.trim() ? "Present" : end.trim();
-  if (!from) return ongoing || end?.trim() ? to : "";
-  return `${from} – ${to}`;
-}
-
-function clean(parts: (string | null | undefined)[]): string[] {
-  return parts
-    .map((part) => part?.trim())
-    .filter((part): part is string => Boolean(part));
-}
-
-/** Joins the non-empty parts, so no stray separators remain. */
-function joinParts(parts: (string | null | undefined)[], separator: string): string {
-  return clean(parts).join(separator);
-}
-
-function toHref(value: string): string {
-  return /^[a-z][a-z0-9+.-]*:/i.test(value) ? value : `https://${value}`;
-}
-
-/** Shows a URL the way it is printed on a resume: no scheme, no `www.`, no trailing slash. */
-function displayUrl(value: string): string {
-  return value
-    .trim()
-    .replace(/^https?:\/\//i, "")
-    .replace(/^www\./i, "")
-    .replace(/\/+$/, "");
-}
-
-type ContactItem = { label: string; href?: string };
 
 /**
  * An entry's heading rows: each row has a left part and an optional right part
@@ -98,23 +69,7 @@ const HeaderSection = memo(function HeaderSection({
 }) {
   const { styles } = theme;
   const name = joinParts([contactInfo.firstName, contactInfo.lastName], " ");
-  const email = contactInfo.email?.trim();
-  const items: ContactItem[] = [
-    contactInfo.address?.trim() ? { label: contactInfo.address.trim() } : null,
-    contactInfo.phone?.trim()
-      ? {
-          label: contactInfo.phone.trim(),
-          href: `tel:${contactInfo.phone.replace(/[^\d+]/g, "")}`,
-        }
-      : null,
-    email ? { label: email, href: `mailto:${email}` } : null,
-    contactInfo.linkedin?.trim()
-      ? { label: displayUrl(contactInfo.linkedin), href: toHref(contactInfo.linkedin.trim()) }
-      : null,
-    contactInfo.github?.trim()
-      ? { label: displayUrl(contactInfo.github), href: toHref(contactInfo.github.trim()) }
-      : null,
-  ].filter((item): item is ContactItem => item !== null);
+  const items = contactItems(contactInfo);
 
   return (
     <View style={styles.header}>
@@ -360,8 +315,10 @@ const CertificationsSection = memo(function CertificationsSection({
   return (
     <Section title="Certifications" theme={theme}>
       {certifications.map((certification, i) => {
-        const issued = formatDate(certification.issueDate);
-        const expires = formatDate(certification.expirationDate);
+        const dates = certificationDates(
+          certification.issueDate,
+          certification.expirationDate,
+        );
         const url = certification.credentialUrl?.trim();
         return (
           <View key={i} style={styles.skillRow} wrap={false}>
@@ -380,13 +337,7 @@ const CertificationsSection = memo(function CertificationsSection({
                   </>
                 ) : null}
               </Text>
-              {issued || expires ? (
-                <Text style={styles.entryRight}>
-                  {issued && expires
-                    ? `${issued} – ${expires}`
-                    : issued ?? `Expires ${expires}`}
-                </Text>
-              ) : null}
+              {dates ? <Text style={styles.entryRight}>{dates}</Text> : null}
             </View>
           </View>
         );
@@ -420,6 +371,23 @@ export function ProfessionalResumeDocument({
     resume;
   const author = joinParts([contactInfo?.firstName, contactInfo?.lastName], " ");
 
+  const sections: Record<ResumeSection, React.ReactNode> = {
+    summary: <SummarySection nodes={htmlNodes.summary} theme={theme} />,
+    skills: <SkillsSection skills={skills} theme={theme} />,
+    experience: (
+      <ExperienceSection
+        experiences={experiences}
+        nodes={htmlNodes.experiences}
+        theme={theme}
+      />
+    ),
+    project: <ProjectsSection projects={projects} nodes={htmlNodes.projects} theme={theme} />,
+    education: (
+      <EducationSection educations={educations} nodes={htmlNodes.educations} theme={theme} />
+    ),
+    certification: <CertificationsSection certifications={certifications} theme={theme} />,
+  };
+
   return (
     <Document
       title={author ? `${author} – Resume` : "Resume"}
@@ -429,20 +397,16 @@ export function ProfessionalResumeDocument({
     >
       <Page size="LETTER" style={theme.styles.page} wrap>
         {contactInfo && <HeaderSection contactInfo={contactInfo} theme={theme} />}
-        <SummarySection nodes={htmlNodes.summary} theme={theme} />
-        <SkillsSection skills={skills} theme={theme} />
-        <ExperienceSection
-          experiences={experiences}
-          nodes={htmlNodes.experiences}
-          theme={theme}
-        />
-        <ProjectsSection projects={projects} nodes={htmlNodes.projects} theme={theme} />
-        <EducationSection
-          educations={educations}
-          nodes={htmlNodes.educations}
-          theme={theme}
-        />
-        <CertificationsSection certifications={certifications} theme={theme} />
+        {/*
+          Sections in the order the user arranged them; contact info always leads.
+          Keyed by position, not by section: react-pdf's reconciler cannot *move*
+          an existing node (its appendChild/insertBefore add without removing), so
+          a keyed reorder leaves the old copy in place and the live preview shows
+          every section twice. Positional keys make React replace each slot instead.
+        */}
+        {resolveSectionOrder(resume.sectionOrder).map((key, position) => (
+          <Fragment key={position}>{sections[key]}</Fragment>
+        ))}
       </Page>
     </Document>
   );

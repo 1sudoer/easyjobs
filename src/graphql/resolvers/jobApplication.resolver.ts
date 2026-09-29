@@ -222,6 +222,7 @@ export const jobApplicationResolvers = {
                 educations: source.educations,
                 projects: source.projects,
                 certifications: source.certifications,
+                sectionOrder: source.sectionOrder,
               },
             })
             data.resumeId = clone.id

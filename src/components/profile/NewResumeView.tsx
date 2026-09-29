@@ -6,7 +6,8 @@ import { ArrowLeft, Loader, PanelRightClose, PanelRightOpen } from "lucide-react
 import { Resume } from "@/models/profile.model";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { ResumePdfPanel } from "./ResumePdfPanel";
+import { ResumePreviewPanel } from "./resume-preview";
+import { DownloadResumeButton } from "./resume-pdf/DownloadResumeButton";
 import { ResumeEditorPanel } from "./ResumeEditorPanel";
 import { createResume, saveFullResume } from "@/actions/profile.actions";
 import { toast } from "../ui/use-toast";
@@ -81,6 +82,8 @@ export function NewResumeView() {
           <span>{isCreating ? "Creating…" : "Create Resume"}</span>
         </Button>
 
+        <DownloadResumeButton resume={previewResume} title={title} />
+
         <Button
           variant={showEdit ? "secondary" : "outline"}
           size="sm"
@@ -96,10 +99,10 @@ export function NewResumeView() {
         </Button>
       </div>
 
-      {/* Split view: PDF preview + editor */}
+      {/* Split view: live preview + editor */}
       <div className="flex gap-4 flex-1 min-h-0">
         <div className="flex-1 min-w-0 min-h-0">
-          <ResumePdfPanel resume={previewResume} />
+          <ResumePreviewPanel resume={previewResume} />
         </div>
 
         {showEdit && (

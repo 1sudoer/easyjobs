@@ -2,11 +2,13 @@
 import { Project } from "@/models/profile.model";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
-import { Edit, ExternalLink, Github, Plus, Trash2 } from "lucide-react";
+import { Edit, ExternalLink, Github, Trash2 } from "lucide-react";
 import { TipTapContentViewer } from "../TipTapContentViewer";
-import { useState, useTransition } from "react";
+import { useState, useTransition, type ReactNode } from "react";
 import { deleteProject } from "@/actions/profile.actions";
 import { toast } from "../ui/use-toast";
+import { DragHandle, SortableList } from "./SortableList";
+import { SectionHeaderRow } from "./SectionHeaderRow";
 import AddProject from "./AddProject";
 
 type ActiveAction = { mode: "add" } | { mode: "edit"; index: number } | null;
@@ -15,9 +17,11 @@ interface ProjectCardProps {
   resumeId: string;
   projects: Project[];
   onLocalChange?: (projects: Project[]) => void;
+  /** Grip for reordering the whole section. */
+  dragHandle?: ReactNode;
 }
 
-function ProjectCard({ resumeId, projects, onLocalChange }: ProjectCardProps) {
+function ProjectCard({ resumeId, projects, onLocalChange, dragHandle }: ProjectCardProps) {
   const [action, setAction] = useState<ActiveAction>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -53,15 +57,16 @@ function ProjectCard({ resumeId, projects, onLocalChange }: ProjectCardProps) {
 
   return (
     <>
-      <div className="flex items-center justify-between pl-4 pr-1 py-1">
-        <span className="text-sm font-semibold">Projects</span>
-        <Button variant="ghost" size="sm" className="h-7 gap-1" onClick={toggleAdd}>
-          <Plus className="h-3.5 w-3.5" />
-          <span className="sr-only sm:not-sr-only sm:whitespace-nowrap text-xs">Add</span>
-        </Button>
-      </div>
+      <SectionHeaderRow title="Projects" onAdd={toggleAdd} dragHandle={dragHandle} />
 
-      {projects.map((project, index) => {
+      <SortableList
+        items={projects}
+        // Entries are addressed by index, so reordering under an open form
+        // would point the form at a different entry.
+        disabled={action !== null || !onLocalChange}
+        onReorder={(next) => onLocalChange?.(next)}
+        className="space-y-3"
+        renderItem={(project, index, handle) => {
         const cardKey = `${project.name}_${project.startDate ?? ""}_${index}`;
 
         if (action?.mode === "edit" && action.index === index) {
@@ -84,7 +89,10 @@ function ProjectCard({ resumeId, projects, onLocalChange }: ProjectCardProps) {
         return (
           <Card key={cardKey}>
             <CardHeader className="p-2 pb-0 flex-row justify-between relative">
-              <CardTitle className="text-xl pl-4">{project.name}</CardTitle>
+              <div className="flex min-w-0 items-center gap-1 pr-16">
+                <DragHandle handle={handle} label={project.name} />
+                <CardTitle className="text-xl">{project.name}</CardTitle>
+              </div>
               <div className="flex gap-0.5 absolute top-0 right-1">
                 <Button
                   variant="ghost"
@@ -142,7 +150,8 @@ function ProjectCard({ resumeId, projects, onLocalChange }: ProjectCardProps) {
             </CardContent>
           </Card>
         );
-      })}
+        }}
+      />
 
       {action?.mode === "add" && (
         <AddProject

@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Edit } from "lucide-react";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
@@ -6,13 +7,18 @@ import { TipTapContentViewer } from "../TipTapContentViewer";
 interface SummarySectionCardProps {
   summary: string;
   onEdit: () => void;
+  /** Grip for reordering the whole section. */
+  dragHandle?: ReactNode;
 }
 
-function SummarySectionCard({ summary, onEdit }: SummarySectionCardProps) {
+function SummarySectionCard({ summary, onEdit, dragHandle }: SummarySectionCardProps) {
   return (
     <Card>
       <CardHeader className="flex-row justify-between relative">
-        <CardTitle>Summary</CardTitle>
+        <div className={`flex items-center gap-1 ${dragHandle ? "-ml-3" : ""}`}>
+          {dragHandle}
+          <CardTitle>Summary</CardTitle>
+        </div>
         <Button
           variant="ghost"
           size="sm"

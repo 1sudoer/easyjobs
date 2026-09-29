@@ -1,16 +1,19 @@
 "use client";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   ContactInfo,
   Education,
   LicenseOrCertification,
   Project,
   Resume,
+  ResumeSection,
   SkillCategory,
   WorkExperience,
+  resolveSectionOrder,
 } from "@/models/profile.model";
 import AddResumeSection, { SectionKey } from "./AddResumeSection";
-import { SectionEmptyRow } from "./SectionEmptyRow";
+import { SectionHeaderRow } from "./SectionHeaderRow";
+import { DragHandle, SortableList } from "./SortableList";
 import ContactInfoCard from "./ContactInfoCard";
 import SummarySectionCard from "./SummarySectionCard";
 import SkillsCard from "./SkillsCard";
@@ -22,6 +25,15 @@ import AddContactInfo from "./AddContactInfo";
 import AddResumeSummary from "./AddResumeSummary";
 import AddSkills from "./AddSkills";
 import AddCertification from "./AddCertification";
+
+const SECTION_TITLES: Record<ResumeSection, string> = {
+  summary: "Summary",
+  skills: "Skills",
+  experience: "Experience",
+  project: "Projects",
+  education: "Education",
+  certification: "Certifications",
+};
 
 type ActiveForm =
   | { type: "contactInfo"; index?: undefined }
@@ -61,6 +73,15 @@ export function ResumeEditorPanel({
   const { contactInfo, summary, skills, experiences, projects, educations, certifications } =
     localResume;
 
+  const sectionOrder = resolveSectionOrder(localResume.sectionOrder);
+  const visibleSections = sectionOrder.filter((section) => addedSections.has(section));
+
+  // Sections not added yet keep their place after the visible ones.
+  const reorderSections = (next: ResumeSection[]) =>
+    updateLocal({
+      sectionOrder: [...next, ...sectionOrder.filter((section) => !next.includes(section))],
+    });
+
   const addSection = (section: SectionKey) =>
     setAddedSections((prev) => new Set([...prev, section]));
 
@@ -75,6 +96,138 @@ export function ResumeEditorPanel({
     setActiveForm({ type: section, ...(index !== undefined ? { index } : {}) } as ActiveForm);
 
   const closeForm = () => setActiveForm(null);
+
+  /** One section of the editor, with `dragHandle` placed in its header. */
+  const renderSection = (section: ResumeSection, dragHandle: ReactNode) => {
+    switch (section) {
+      case "summary":
+        return (
+          <>
+            {activeForm?.type !== "summary" &&
+              (summary ? (
+                <SummarySectionCard
+                  summary={summary}
+                  onEdit={() => openForm("summary")}
+                  dragHandle={dragHandle}
+                />
+              ) : (
+                <SectionHeaderRow
+                  title="Summary"
+                  onAdd={() => toggleForm("summary")}
+                  dragHandle={dragHandle}
+                />
+              ))}
+            {activeForm?.type === "summary" && (
+              <AddResumeSummary
+                resumeId={resumeId}
+                summaryContent={summary}
+                onClose={closeForm}
+                onLocalSave={(s: string) => updateLocal({ summary: s })}
+              />
+            )}
+          </>
+        );
+
+      case "skills":
+        return (
+          <>
+            <SkillsCard
+              resumeId={resumeId ?? ""}
+              skills={skills ?? []}
+              onEdit={(_sc: SkillCategory, index: number) => openForm("skills", index)}
+              onAdd={() => toggleForm("skills")}
+              onLocalDelete={(index: number) =>
+                updateLocal({ skills: (skills ?? []).filter((_, i) => i !== index) })
+              }
+              onReorder={(next: SkillCategory[]) => updateLocal({ skills: next })}
+              // The form edits by index, so the order must hold while it is open.
+              reorderDisabled={activeForm?.type === "skills"}
+              dragHandle={dragHandle}
+            />
+            {activeForm?.type === "skills" && (
+              <AddSkills
+                resumeId={resumeId}
+                skillToEdit={activeForm.index !== undefined ? skills?.[activeForm.index] : null}
+                skillIndex={activeForm.index}
+                onClose={closeForm}
+                onLocalSave={(skill: SkillCategory, index?: number) => {
+                  const arr = skills ?? [];
+                  updateLocal({
+                    skills:
+                      index !== undefined
+                        ? arr.map((s, i) => (i === index ? skill : s))
+                        : [...arr, skill],
+                  });
+                }}
+              />
+            )}
+          </>
+        );
+
+      case "experience":
+        return (
+          <ExperienceCard
+            resumeId={resumeId ?? ""}
+            experiences={experiences ?? []}
+            onLocalChange={(exps: WorkExperience[]) => updateLocal({ experiences: exps })}
+            dragHandle={dragHandle}
+          />
+        );
+
+      case "project":
+        return (
+          <ProjectCard
+            resumeId={resumeId ?? ""}
+            projects={projects ?? []}
+            onLocalChange={(next: Project[]) => updateLocal({ projects: next })}
+            dragHandle={dragHandle}
+          />
+        );
+
+      case "education":
+        return (
+          <EducationCard
+            resumeId={resumeId ?? ""}
+            educations={educations ?? []}
+            onLocalChange={(edus: Education[]) => updateLocal({ educations: edus })}
+            dragHandle={dragHandle}
+          />
+        );
+
+      case "certification":
+        return (
+          <>
+            <CertificationCard
+              certifications={certifications ?? []}
+              onEdit={(index: number) => openForm("certification", index)}
+              onAdd={() => toggleForm("certification")}
+              onReorder={(next: LicenseOrCertification[]) =>
+                updateLocal({ certifications: next })
+              }
+              reorderDisabled={activeForm?.type === "certification"}
+              dragHandle={dragHandle}
+            />
+            {activeForm?.type === "certification" && (
+              <AddCertification
+                resumeId={resumeId}
+                certificationIndex={activeForm.index}
+                certifications={certifications}
+                onClose={closeForm}
+                onLocalSave={(cert: LicenseOrCertification, index?: number) => {
+                  const arr = certifications ?? [];
+                  updateLocal({
+                    certifications:
+                      index !== undefined
+                        ? arr.map((c, i) => (i === index ? cert : c))
+                        : [...arr, cert],
+                  });
+                }}
+              />
+            )}
+          </>
+        );
+    }
+  };
 
   return (
     <div className="w-[380px] xl:w-[430px] shrink-0 flex flex-col gap-3 min-h-0">
@@ -100,7 +253,7 @@ export function ResumeEditorPanel({
                   />
                 )
               : activeForm?.type !== "contactInfo" && (
-                  <SectionEmptyRow
+                  <SectionHeaderRow
                     title="Contact Info"
                     onAdd={() => toggleForm("contactInfo")}
                   />
@@ -116,117 +269,22 @@ export function ResumeEditorPanel({
           </>
         )}
 
-        {/* Summary */}
-        {addedSections.has("summary") && (
-          <>
-            {summary
-              ? activeForm?.type !== "summary" && (
-                  <SummarySectionCard
-                    summary={summary}
-                    onEdit={() => openForm("summary")}
-                  />
-                )
-              : activeForm?.type !== "summary" && (
-                  <SectionEmptyRow title="Summary" onAdd={() => toggleForm("summary")} />
-                )}
-            {activeForm?.type === "summary" && (
-              <AddResumeSummary
-                resumeId={resumeId}
-                summaryContent={summary}
-                onClose={closeForm}
-                onLocalSave={(s: string) => updateLocal({ summary: s })}
-              />
-            )}
-          </>
-        )}
-
-        {/* Skills */}
-        {addedSections.has("skills") && (
-          <>
-            <SkillsCard
-              resumeId={resumeId ?? ""}
-              skills={skills ?? []}
-              onEdit={(_sc: SkillCategory, index: number) => openForm("skills", index)}
-              onAdd={() => toggleForm("skills")}
-              onLocalDelete={(index: number) =>
-                updateLocal({ skills: (skills ?? []).filter((_, i) => i !== index) })
-              }
-            />
-            {activeForm?.type === "skills" && (
-              <AddSkills
-                resumeId={resumeId}
-                skillToEdit={activeForm.index !== undefined ? skills?.[activeForm.index] : null}
-                skillIndex={activeForm.index}
-                onClose={closeForm}
-                onLocalSave={(skill: SkillCategory, index?: number) => {
-                  const arr = skills ?? [];
-                  updateLocal({
-                    skills:
-                      index !== undefined
-                        ? arr.map((s, i) => (i === index ? skill : s))
-                        : [...arr, skill],
-                  });
-                }}
-              />
-            )}
-          </>
-        )}
-
-        {/* Experience */}
-        {addedSections.has("experience") && (
-          <ExperienceCard
-            resumeId={resumeId ?? ""}
-            experiences={experiences ?? []}
-            onLocalChange={(exps: WorkExperience[]) => updateLocal({ experiences: exps })}
-          />
-        )}
-
-        {/* Projects */}
-        {addedSections.has("project") && (
-          <ProjectCard
-            resumeId={resumeId ?? ""}
-            projects={projects ?? []}
-            onLocalChange={(next: Project[]) => updateLocal({ projects: next })}
-          />
-        )}
-
-        {/* Education */}
-        {addedSections.has("education") && (
-          <EducationCard
-            resumeId={resumeId ?? ""}
-            educations={educations ?? []}
-            onLocalChange={(edus: Education[]) => updateLocal({ educations: edus })}
-          />
-        )}
-
-        {/* Certifications */}
-        {addedSections.has("certification") && (
-          <>
-            <CertificationCard
-              certifications={certifications ?? []}
-              onEdit={(index: number) => openForm("certification", index)}
-              onAdd={() => toggleForm("certification")}
-            />
-            {activeForm?.type === "certification" && (
-              <AddCertification
-                resumeId={resumeId}
-                certificationIndex={activeForm.index}
-                certifications={certifications}
-                onClose={closeForm}
-                onLocalSave={(cert: LicenseOrCertification, index?: number) => {
-                  const arr = certifications ?? [];
-                  updateLocal({
-                    certifications:
-                      index !== undefined
-                        ? arr.map((c, i) => (i === index ? cert : c))
-                        : [...arr, cert],
-                  });
-                }}
-              />
-            )}
-          </>
-        )}
-
+        {/* Every other section, in the resume's order and draggable by its header. */}
+        <SortableList
+          items={visibleSections}
+          getKey={(section) => section}
+          onReorder={reorderSections}
+          className="space-y-3"
+          renderItem={(section, _index, handle) => (
+            // A section can be several siblings (header, entries, open form).
+            <div className="space-y-3">
+              {renderSection(
+                section,
+                <DragHandle handle={handle} label={`${SECTION_TITLES[section]} section`} />,
+              )}
+            </div>
+          )}
+        />
       </div>
     </div>
   );
