@@ -1,5 +1,6 @@
 'use client'
 import Link from 'next/link'
+import { socialProfile } from "@/lib/social-profiles";
 import { ExternalLink } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
@@ -101,6 +102,7 @@ export function ApplicationResumePanel({
   profileDetails,
   appliedWith,
 }: Props) {
+  const appliedLinkedIn = socialProfile("linkedin", appliedWith?.linkedin);
   return (
     <div className="space-y-4">
       {/* Applied With */}
@@ -110,8 +112,8 @@ export function ApplicationResumePanel({
           <div className="text-sm space-y-0.5">
             <p className="font-medium">{appliedWith.name}</p>
             <p className="text-xs text-muted-foreground">{appliedWith.email}</p>
-            {appliedWith.linkedin && (
-              <p className="text-xs text-muted-foreground">{appliedWith.linkedin}</p>
+            {appliedLinkedIn && (
+              <p className="text-xs text-muted-foreground">{appliedLinkedIn.label}</p>
             )}
             {appliedWith.address && (
               <p className="text-xs text-muted-foreground">{appliedWith.address}</p>

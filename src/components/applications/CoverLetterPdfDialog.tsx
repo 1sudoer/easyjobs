@@ -1,5 +1,6 @@
 "use client";
 import { Document, Page, Text, View, StyleSheet, PDFViewer, PDFDownloadLink } from "@react-pdf/renderer";
+import { socialProfile } from "@/lib/social-profiles";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
@@ -95,7 +96,12 @@ function CoverLetterDocument({
   job: CoverLetterJob;
   date: string;
 }) {
-  const contactItems = [profile.phone, profile.email, profile.linkedin, profile.github].filter(Boolean) as string[];
+  const contactItems = [
+    profile.phone,
+    profile.email,
+    socialProfile("linkedin", profile.linkedin)?.label,
+    socialProfile("github", profile.github)?.label,
+  ].filter(Boolean) as string[];
 
   return (
     <Document>

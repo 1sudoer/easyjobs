@@ -394,6 +394,7 @@ const RESUME_DRAFT_FIELDS = /* GraphQL */ `
   educations
   projects
   certifications
+  sectionOrder
   createdAt
   updatedAt
 `

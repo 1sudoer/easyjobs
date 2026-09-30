@@ -1,4 +1,5 @@
 "use client";
+import type { ResumeSection } from "@/models/profile.model";
 import { PlusCircle } from "lucide-react";
 import { Button } from "../ui/button";
 import {
@@ -9,14 +10,8 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 
-export type SectionKey =
-  | "contactInfo"
-  | "summary"
-  | "skills"
-  | "experience"
-  | "project"
-  | "education"
-  | "certification";
+/** Contact info plus the movable sections. */
+export type SectionKey = "contactInfo" | ResumeSection;
 
 interface AddResumeSectionProps {
   addedSections: Set<SectionKey>;

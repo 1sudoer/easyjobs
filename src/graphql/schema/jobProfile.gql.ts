@@ -27,6 +27,7 @@ export const jobProfileTypeDefs = /* GraphQL */ `
     educations: JSON
     projects: JSON
     certifications: JSON
+    sectionOrder: [String!]!
     createdAt: String!
     updatedAt: String!
   }
@@ -40,6 +41,7 @@ export const jobProfileTypeDefs = /* GraphQL */ `
     educations: JSON
     projects: JSON
     certifications: JSON
+    sectionOrder: [String!]
   }
 
   input CreateJobProfileInput {

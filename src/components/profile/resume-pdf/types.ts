@@ -11,6 +11,7 @@ export type ResumeDocumentData = Pick<
   | "educations"
   | "projects"
   | "certifications"
+  | "sectionOrder"
 >;
 
 /**

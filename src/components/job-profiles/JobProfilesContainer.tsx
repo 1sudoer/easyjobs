@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { socialProfile } from '@/lib/social-profiles'
 import { useQuery, useMutation } from '@apollo/client/react'
 import { Plus, Trash2, Star, FileText, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
@@ -71,8 +72,14 @@ export function JobProfilesContainer() {
               {p.description && <p className="text-xs text-muted-foreground line-clamp-2">{p.description}</p>}
 
               <div className="flex flex-wrap gap-x-3 text-xs text-muted-foreground">
-                {p.linkedin && <a href={p.linkedin} target="_blank" rel="noopener noreferrer" className="hover:underline">LinkedIn</a>}
-                {p.github && <a href={p.github} target="_blank" rel="noopener noreferrer" className="hover:underline">GitHub</a>}
+                {[socialProfile('linkedin', p.linkedin), socialProfile('github', p.github)].map(
+                  (profile) =>
+                    profile && (
+                      <a key={profile.href} href={profile.href} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                        {profile.label}
+                      </a>
+                    ),
+                )}
                 {p.phone && <span>{p.phone}</span>}
               </div>
 

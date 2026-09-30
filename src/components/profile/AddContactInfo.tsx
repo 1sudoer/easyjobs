@@ -1,5 +1,7 @@
 "use client";
 import { Loader, X } from "lucide-react";
+import { SocialHandleInput } from "../SocialHandleInput";
+import { extractHandle, toStoredHandle } from "@/lib/social-profiles";
 import { Button } from "../ui/button";
 import {
   Form,
@@ -62,8 +64,9 @@ function AddContactInfo({
         headline: contactInfoToEdit.headline ?? "",
         phone: contactInfoToEdit.phone ?? "",
         address: contactInfoToEdit.address ?? "",
-        github: contactInfoToEdit.github ?? "",
-        linkedin: contactInfoToEdit.linkedin ?? "",
+        // Older resumes may hold full profile URLs; edit them as handles.
+        github: extractHandle("github", contactInfoToEdit.github),
+        linkedin: extractHandle("linkedin", contactInfoToEdit.linkedin),
       }, { keepDefaultValues: true });
     } else {
       reset({ resumeId, ...EMPTY_FORM });
@@ -79,8 +82,8 @@ function AddContactInfo({
         headline: data.headline || undefined,
         phone: data.phone || undefined,
         address: data.address || undefined,
-        github: data.github || undefined,
-        linkedin: data.linkedin || undefined,
+        github: toStoredHandle("github", data.github) ?? undefined,
+        linkedin: toStoredHandle("linkedin", data.linkedin) ?? undefined,
       });
       reset(data);
       onClose();
@@ -194,10 +197,10 @@ function AddContactInfo({
             control={form.control}
             name="linkedin"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="md:col-span-2">
                 <FormLabel>LinkedIn</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="linkedin.com/in/username" />
+                  <SocialHandleInput {...field} network="linkedin" hideHint />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -207,10 +210,10 @@ function AddContactInfo({
             control={form.control}
             name="github"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="md:col-span-2">
                 <FormLabel>GitHub</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="github.com/username" />
+                  <SocialHandleInput {...field} network="github" hideHint />
                 </FormControl>
                 <FormMessage />
               </FormItem>

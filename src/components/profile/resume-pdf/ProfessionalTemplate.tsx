@@ -1,74 +1,60 @@
-import React, { memo } from "react";
-import { Document, Font, Page, Text, View } from "@react-pdf/renderer";
-import { format } from "date-fns";
+import React, { Fragment, memo } from "react";
+import { Document, Font, Link, Page, Text, View } from "@react-pdf/renderer";
 import {
-  SectionHeading,
-  defaultResumeTheme,
-  type ResumeTheme,
-} from "./primitives";
+  certificationDates,
+  clean,
+  contactItems,
+  dateRange,
+  displayUrl,
+  joinParts,
+  toHref,
+} from "./format";
+import { Section, defaultResumeTheme, type ResumeTheme } from "./primitives";
 import type { ResumeDocumentData, ResumeHtmlNodes } from "./types";
-import type {
-  ContactInfo,
-  Education,
-  LicenseOrCertification,
-  Project,
-  SkillCategory,
-  WorkExperience,
+import {
+  resolveSectionOrder,
+  type ContactInfo,
+  type Education,
+  type LicenseOrCertification,
+  type Project,
+  type ResumeSection,
+  type SkillCategory,
+  type WorkExperience,
 } from "@/models/profile.model";
 
 Font.registerHyphenationCallback((word) => [word]);
 
-function formatDate(date: Date | string | undefined | null): string {
-  if (!date) return "Present";
-  return format(new Date(date), "MMM yyyy");
-}
-
-function dateRange(start?: string | null, end?: string | null, ongoing?: boolean): string {
-  const from = start?.trim();
-  const to = ongoing || !end?.trim() ? "Present" : end.trim();
-  if (!from) return to;
-  return `${from} – ${to}`;
-}
-
-function joinParts(parts: (string | null | undefined)[], separator: string): string {
-  return parts
-    .map((part) => part?.trim())
-    .filter((part): part is string => Boolean(part))
-    .join(separator);
-}
-
-/** Joins the parts of a meta line, dropping empty ones so no stray separators remain. */
-function metaLine(parts: (string | null | undefined)[]): string {
-  return joinParts(parts, " · ");
-}
-
-/** "Job Title — Company", omitting the dash when either side is missing. */
-function titleLine(parts: (string | null | undefined)[]): string {
-  return joinParts(parts, " — ");
-}
-
 /**
- * Title and meta lines of an entry, kept together on one page. That is safe here
- * because the group is at most a handful of short lines — unlike the entry as a
- * whole, which may well be taller than a page and is deliberately left outside
- * this group so it can split.
+ * An entry's heading rows: each row has a left part and an optional right part
+ * (dates, location), pinned to the right margin. Kept together on one page — it
+ * is only a couple of short lines — and nudged onto the next page when there is
+ * no room left for the entry's first line of content.
+ *
+ * Entries are fragments — header and content are siblings of the previous
+ * entry — since `minPresenceAhead` is ignored for the first child of a `View`.
  */
 function EntryHeader({
-  title,
-  meta,
+  rows,
+  first,
   theme,
 }: {
-  title: string;
-  meta: string[];
+  rows: { left: React.ReactNode; right?: string | null }[];
+  /** First entry of its section, which needs no space above it. */
+  first: boolean;
   theme: ResumeTheme;
 }) {
+  const { styles } = theme;
   return (
-    <View wrap={false} minPresenceAhead={theme.breaks.entryHeader}>
-      <Text style={theme.styles.entryTitle}>{title}</Text>
-      {meta.map((line, i) => (
-        <Text key={i} style={theme.styles.entryMeta}>
-          {line}
-        </Text>
+    <View
+      style={first ? styles.entryHeader : styles.entryHeaderFollowing}
+      wrap={false}
+      minPresenceAhead={theme.breaks.entryHeader}
+    >
+      {rows.map((row, i) => (
+        <View key={i} style={styles.entryRow}>
+          <View style={styles.entryLeft}>{row.left}</View>
+          {row.right ? <Text style={styles.entryRight}>{row.right}</Text> : null}
+        </View>
       ))}
     </View>
   );
@@ -82,31 +68,31 @@ const HeaderSection = memo(function HeaderSection({
   theme: ResumeTheme;
 }) {
   const { styles } = theme;
-  const contactLines = [
-    contactInfo.email,
-    contactInfo.phone,
-    contactInfo.address,
-    contactInfo.linkedin,
-    contactInfo.github,
-  ].filter(Boolean);
+  const name = joinParts([contactInfo.firstName, contactInfo.lastName], " ");
+  const items = contactItems(contactInfo);
 
   return (
     <View style={styles.header}>
-      <View style={styles.headerIdentity}>
-        <Text style={styles.heading}>
-          {contactInfo.firstName} {contactInfo.lastName}
-        </Text>
-        {contactInfo.headline ? (
-          <Text style={styles.subheading}>{contactInfo.headline}</Text>
-        ) : null}
-      </View>
-      <View style={styles.headerContact}>
-        {contactLines.map((line, i) => (
-          <Text key={i} style={styles.contactLine}>
-            {line}
-          </Text>
-        ))}
-      </View>
+      {name ? <Text style={styles.name}>{name}</Text> : null}
+      {contactInfo.headline?.trim() ? (
+        <Text style={styles.headline}>{contactInfo.headline.trim()}</Text>
+      ) : null}
+      {items.length > 0 ? (
+        <View style={styles.contactLine}>
+          {items.map((item, i) => (
+            <Fragment key={i}>
+              {i > 0 ? <Text style={styles.separator}>•</Text> : null}
+              {item.href ? (
+                <Link src={item.href} style={styles.contactItem}>
+                  {item.label}
+                </Link>
+              ) : (
+                <Text style={styles.contactItem}>{item.label}</Text>
+              )}
+            </Fragment>
+          ))}
+        </View>
+      ) : null}
     </View>
   );
 });
@@ -120,10 +106,9 @@ const SummarySection = memo(function SummarySection({
 }) {
   if (nodes.length === 0) return null;
   return (
-    <View>
-      <SectionHeading title="Summary" theme={theme} />
+    <Section title="Summary" theme={theme}>
       {nodes}
-    </View>
+    </Section>
   );
 });
 
@@ -135,20 +120,20 @@ const SkillsSection = memo(function SkillsSection({
   theme: ResumeTheme;
 }) {
   const { styles } = theme;
-  if (!skills?.length) return null;
+  const categories = skills?.filter((category) => clean(category.details).length > 0);
+  if (!categories?.length) return null;
 
   return (
-    <View>
-      <SectionHeading title="Skills" theme={theme} />
-      {skills.map((category, i) => (
-        <View key={i} style={styles.skillRow}>
-          <Text style={styles.bodyText} orphans={2} widows={2}>
-            <Text style={styles.bold}>{category.label}: </Text>
-            {category.details.join(", ")}
-          </Text>
-        </View>
+    <Section title="Skills" theme={theme}>
+      {categories.map((category, i) => (
+        <Text key={i} style={styles.skillRow} orphans={2} widows={2}>
+          {category.label?.trim() ? (
+            <Text style={styles.bold}>{category.label.trim()}: </Text>
+          ) : null}
+          {clean(category.details).join(", ")}
+        </Text>
       ))}
-    </View>
+    </Section>
   );
 });
 
@@ -165,28 +150,41 @@ const ExperienceSection = memo(function ExperienceSection({
   if (!experiences?.length) return null;
 
   return (
-    <View>
-      <SectionHeading title="Experience" theme={theme} />
-      {experiences.map((experience, i) => (
-        <View key={i} style={styles.entry}>
-          <EntryHeader
-            theme={theme}
-            title={titleLine([experience.jobTitle, experience.company])}
-            meta={[
-              metaLine([
-                dateRange(
-                  experience.startDate,
-                  experience.endDate,
-                  experience.currentJob,
-                ),
-                experience.location,
-              ]),
-            ].filter(Boolean)}
-          />
-          {nodes[i]}
-        </View>
-      ))}
-    </View>
+    <Section title="Experience" theme={theme}>
+      {experiences.map((experience, i) => {
+        const company = experience.company?.trim();
+        const location = experience.location?.trim();
+        const jobTitle = experience.jobTitle?.trim();
+        const dates = dateRange(
+          experience.startDate,
+          experience.endDate,
+          experience.currentJob,
+        );
+        // Company and location first, then title and dates — the conventional
+        // US order. Without a company the title moves up and stays bold.
+        const rows = company
+          ? [
+              {
+                left: <Text style={styles.entryTitle}>{company}</Text>,
+                right: location,
+              },
+              { left: <Text style={styles.italic}>{jobTitle}</Text>, right: dates },
+            ]
+          : [
+              {
+                left: <Text style={styles.entryTitle}>{jobTitle}</Text>,
+                right: location,
+              },
+              ...(dates ? [{ left: null, right: dates }] : []),
+            ];
+        return (
+          <Fragment key={i}>
+            <EntryHeader theme={theme} first={i === 0} rows={rows} />
+            {nodes[i]}
+          </Fragment>
+        );
+      })}
+    </Section>
   );
 });
 
@@ -203,32 +201,48 @@ const ProjectsSection = memo(function ProjectsSection({
   if (!projects?.length) return null;
 
   return (
-    <View>
-      <SectionHeading title="Projects" theme={theme} />
+    <Section title="Projects" theme={theme}>
       {projects.map((project, i) => {
-        const links = metaLine([project.url, project.githubUrl]);
+        const links = clean([project.url, project.githubUrl]);
+        const technologies = clean(project.technologies ?? []);
         return (
-          <View key={i} style={styles.entry}>
+          <Fragment key={i}>
             <EntryHeader
               theme={theme}
-              title={project.name}
-              meta={[
-                metaLine([
-                  dateRange(project.startDate, project.endDate, project.current),
-                  links,
-                ]),
-              ].filter(Boolean)}
+              first={i === 0}
+              rows={[
+                {
+                  left: (
+                    <Text>
+                      <Text style={styles.entryTitle}>{project.name}</Text>
+                      {links.map((link, j) => (
+                        <Fragment key={j}>
+                          <Text style={styles.entryMeta}>{j === 0 ? "  |  " : "  •  "}</Text>
+                          <Link src={toHref(link)} style={styles.link}>
+                            {displayUrl(link)}
+                          </Link>
+                        </Fragment>
+                      ))}
+                    </Text>
+                  ),
+                  right: dateRange(project.startDate, project.endDate, project.current),
+                },
+                ...(technologies.length
+                  ? [
+                      {
+                        left: (
+                          <Text style={styles.italic}>{technologies.join(", ")}</Text>
+                        ),
+                      },
+                    ]
+                  : []),
+              ]}
             />
-            {project.technologies?.length ? (
-              <Text style={styles.projectTech}>
-                {project.technologies.join(", ")}
-              </Text>
-            ) : null}
             {nodes[i]}
-          </View>
+          </Fragment>
         );
       })}
-    </View>
+    </Section>
   );
 });
 
@@ -245,26 +259,46 @@ const EducationSection = memo(function EducationSection({
   if (!educations?.length) return null;
 
   return (
-    <View>
-      <SectionHeading title="Education" theme={theme} />
-      {educations.map((education, i) => (
-        <View key={i} style={styles.entry}>
-          <EntryHeader
-            theme={theme}
-            title={education.institution}
-            meta={[
-              metaLine([education.degree, education.fieldOfStudy]),
-              metaLine([
-                dateRange(education.startDate, education.endDate),
-                education.cgpa ? `GPA: ${education.cgpa}` : null,
-                education.location,
-              ]),
-            ].filter(Boolean)}
-          />
-          {nodes[i]}
-        </View>
-      ))}
-    </View>
+    <Section title="Education" theme={theme}>
+      {educations.map((education, i) => {
+        const degree = joinParts([education.degree, education.fieldOfStudy], " in ");
+        const cgpa = education.cgpa?.trim();
+        const dates = dateRange(education.startDate, education.endDate);
+        // Same order as experience: school and location, then degree and dates.
+        return (
+          <Fragment key={i}>
+            <EntryHeader
+              theme={theme}
+              first={i === 0}
+              rows={[
+                {
+                  left: <Text style={styles.entryTitle}>{education.institution}</Text>,
+                  right: education.location?.trim(),
+                },
+                ...(degree || cgpa || dates
+                  ? [
+                      {
+                        left: (
+                          <Text>
+                            {degree ? <Text style={styles.italic}>{degree}</Text> : null}
+                            {cgpa ? (
+                              <Text style={styles.entryMeta}>
+                                {degree ? " • " : ""}GPA: {cgpa}
+                              </Text>
+                            ) : null}
+                          </Text>
+                        ),
+                        right: dates,
+                      },
+                    ]
+                  : []),
+              ]}
+            />
+            {nodes[i]}
+          </Fragment>
+        );
+      })}
+    </Section>
   );
 });
 
@@ -279,29 +313,36 @@ const CertificationsSection = memo(function CertificationsSection({
   if (!certifications?.length) return null;
 
   return (
-    <View>
-      <SectionHeading title="Certifications" theme={theme} />
-      {certifications.map((certification, i) => (
-        <View key={i} style={styles.certification}>
-          <EntryHeader
-            theme={theme}
-            title={certification.title}
-            meta={[
-              certification.organization,
-              metaLine([
-                certification.issueDate
-                  ? `Issued: ${formatDate(certification.issueDate)}`
-                  : null,
-                certification.expirationDate
-                  ? `Expires: ${formatDate(certification.expirationDate)}`
-                  : null,
-              ]),
-              certification.credentialUrl,
-            ].filter((line): line is string => Boolean(line))}
-          />
-        </View>
-      ))}
-    </View>
+    <Section title="Certifications" theme={theme}>
+      {certifications.map((certification, i) => {
+        const dates = certificationDates(
+          certification.issueDate,
+          certification.expirationDate,
+        );
+        const url = certification.credentialUrl?.trim();
+        return (
+          <View key={i} style={styles.skillRow} wrap={false}>
+            <View style={styles.entryRow}>
+              <Text style={styles.entryLeft}>
+                <Text style={styles.entryTitle}>{certification.title}</Text>
+                {certification.organization?.trim() ? (
+                  <Text> — {certification.organization.trim()}</Text>
+                ) : null}
+                {url ? (
+                  <>
+                    <Text style={styles.entryMeta}>  |  </Text>
+                    <Link src={toHref(url)} style={styles.link}>
+                      {displayUrl(url)}
+                    </Link>
+                  </>
+                ) : null}
+              </Text>
+              {dates ? <Text style={styles.entryRight}>{dates}</Text> : null}
+            </View>
+          </View>
+        );
+      })}
+    </Section>
   );
 });
 
@@ -312,7 +353,9 @@ type Props = {
 };
 
 /**
- * Multi-page resume document.
+ * Single-column US resume on Letter paper, laid out like resume-lm's template:
+ * centered name and contact line, then ruled sections with titles on the left
+ * and dates flush right.
  *
  * Content flows: no section or entry is marked `wrap={false}`, so anything
  * taller than the space left on a page — or taller than a whole page — is split
@@ -326,35 +369,44 @@ export function ProfessionalResumeDocument({
 }: Props) {
   const { contactInfo, skills, experiences, educations, projects, certifications } =
     resume;
+  const author = joinParts([contactInfo?.firstName, contactInfo?.lastName], " ");
+
+  const sections: Record<ResumeSection, React.ReactNode> = {
+    summary: <SummarySection nodes={htmlNodes.summary} theme={theme} />,
+    skills: <SkillsSection skills={skills} theme={theme} />,
+    experience: (
+      <ExperienceSection
+        experiences={experiences}
+        nodes={htmlNodes.experiences}
+        theme={theme}
+      />
+    ),
+    project: <ProjectsSection projects={projects} nodes={htmlNodes.projects} theme={theme} />,
+    education: (
+      <EducationSection educations={educations} nodes={htmlNodes.educations} theme={theme} />
+    ),
+    certification: <CertificationsSection certifications={certifications} theme={theme} />,
+  };
 
   return (
     <Document
-      author={`${contactInfo?.firstName ?? ""} ${contactInfo?.lastName ?? ""}`.trim()}
+      title={author ? `${author} – Resume` : "Resume"}
+      author={author}
       creator="easyjobs.tokadream.com"
       producer="react-pdf"
     >
-      <Page size="A4" style={theme.styles.page} wrap>
-        {contactInfo && (
-          <HeaderSection contactInfo={contactInfo} theme={theme} />
-        )}
-        <SummarySection nodes={htmlNodes.summary} theme={theme} />
-        <SkillsSection skills={skills} theme={theme} />
-        <ExperienceSection
-          experiences={experiences}
-          nodes={htmlNodes.experiences}
-          theme={theme}
-        />
-        <ProjectsSection
-          projects={projects}
-          nodes={htmlNodes.projects}
-          theme={theme}
-        />
-        <EducationSection
-          educations={educations}
-          nodes={htmlNodes.educations}
-          theme={theme}
-        />
-        <CertificationsSection certifications={certifications} theme={theme} />
+      <Page size="LETTER" style={theme.styles.page} wrap>
+        {contactInfo && <HeaderSection contactInfo={contactInfo} theme={theme} />}
+        {/*
+          Sections in the order the user arranged them; contact info always leads.
+          Keyed by position, not by section: react-pdf's reconciler cannot *move*
+          an existing node (its appendChild/insertBefore add without removing), so
+          a keyed reorder leaves the old copy in place and the live preview shows
+          every section twice. Positional keys make React replace each slot instead.
+        */}
+        {resolveSectionOrder(resume.sectionOrder).map((key, position) => (
+          <Fragment key={position}>{sections[key]}</Fragment>
+        ))}
       </Page>
     </Document>
   );
