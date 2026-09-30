@@ -1,5 +1,6 @@
 import { GraphQLContext, requireAuth } from '../context'
 import { enqueueGenerateCV } from '@/lib/lavinmq'
+import { socialProfile, toStoredHandle } from '@/lib/social-profiles'
 
 const PAGE_SIZE = 20
 
@@ -275,8 +276,9 @@ export const jobApplicationResolvers = {
           email: application.jobProfile.email,
           phone: application.jobProfile.phone ?? undefined,
           address: application.jobProfile.address ?? undefined,
-          linkedin: application.jobProfile.linkedin ?? undefined,
-          github: application.jobProfile.github ?? undefined,
+          // The model reads the profile address better than a bare handle.
+          linkedin: socialProfile('linkedin', application.jobProfile.linkedin)?.label,
+          github: socialProfile('github', application.jobProfile.github)?.label,
           details: application.jobProfile.details,
         },
         applicationId: application.id,
@@ -354,8 +356,8 @@ export const jobApplicationResolvers = {
         phone: raw.phone ?? null,
         address: raw.address ?? null,
         headline: raw.headline ?? null,
-        linkedin: raw.linkedin ?? null,
-        github: raw.github ?? null,
+        linkedin: toStoredHandle('linkedin', raw.linkedin),
+        github: toStoredHandle('github', raw.github),
       }
 
       const fullName = [firstName, lastName].filter(Boolean).join(' ')

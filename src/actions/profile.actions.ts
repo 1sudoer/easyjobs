@@ -1,5 +1,6 @@
 "use server";
 import prisma from "@/lib/db";
+import { toStoredHandle, withStoredHandles } from "@/lib/social-profiles";
 import { handleError } from "@/lib/utils";
 import { AddEducationFormSchema } from "@/models/AddEductionForm.schema";
 import { AddContactInfoFormSchema } from "@/models/addContactInfoForm.schema";
@@ -130,8 +131,8 @@ export const saveContactInfo = async (
           headline: data.headline || null,
           phone: data.phone || null,
           address: data.address || null,
-          github: data.github || null,
-          linkedin: data.linkedin || null,
+          github: toStoredHandle("github", data.github),
+          linkedin: toStoredHandle("linkedin", data.linkedin),
         },
       },
     });
@@ -781,7 +782,9 @@ export const saveFullResume = async (resume: Resume): Promise<any | undefined> =
     await prisma.resume.update({
       where: { id: resume.id, userId: user.id },
       data: {
-        contactInfo: (resume.contactInfo as any) ?? undefined,
+        contactInfo: resume.contactInfo
+          ? (withStoredHandles(resume.contactInfo) as any)
+          : undefined,
         summary: resume.summary ?? null,
         skills: (resume.skills as any) ?? [],
         experiences: (resume.experiences as any) ?? [],

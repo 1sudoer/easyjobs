@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { socialProfile } from "@/lib/social-profiles";
 
 /**
  * Text formatting shared by the PDF document and the HTML live preview, so the
@@ -55,7 +56,10 @@ export function displayUrl(value: string): string {
 
 export type ContactItem = { label: string; href?: string };
 
-/** The contact line in print order: location, phone, email, LinkedIn, GitHub. */
+/**
+ * The contact line in print order: location, phone, email, LinkedIn, GitHub.
+ * Profiles are stored as handles and printed as their full addresses.
+ */
 export function contactItems(contactInfo: {
   email?: string;
   phone?: string;
@@ -65,13 +69,13 @@ export function contactItems(contactInfo: {
 }): ContactItem[] {
   const email = contactInfo.email?.trim();
   const phone = contactInfo.phone?.trim();
-  const linkedin = contactInfo.linkedin?.trim();
-  const github = contactInfo.github?.trim();
+  const linkedin = socialProfile("linkedin", contactInfo.linkedin);
+  const github = socialProfile("github", contactInfo.github);
   return [
     contactInfo.address?.trim() ? { label: contactInfo.address.trim() } : null,
     phone ? { label: phone, href: `tel:${phone.replace(/[^\d+]/g, "")}` } : null,
     email ? { label: email, href: `mailto:${email}` } : null,
-    linkedin ? { label: displayUrl(linkedin), href: toHref(linkedin) } : null,
-    github ? { label: displayUrl(github), href: toHref(github) } : null,
+    linkedin ? { label: linkedin.label, href: linkedin.href } : null,
+    github ? { label: github.label, href: github.href } : null,
   ].filter((item): item is ContactItem => item !== null);
 }

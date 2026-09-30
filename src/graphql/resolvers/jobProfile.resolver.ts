@@ -1,4 +1,13 @@
 import { GraphQLContext, requireAuth } from '../context'
+import { toStoredHandle, withStoredHandles } from '@/lib/social-profiles'
+
+/** LinkedIn and GitHub are stored as bare handles; leaves absent fields absent. */
+function profileHandles(input: { linkedin?: string | null; github?: string | null }) {
+  return {
+    ...(input.linkedin !== undefined && { linkedin: toStoredHandle('linkedin', input.linkedin) }),
+    ...(input.github !== undefined && { github: toStoredHandle('github', input.github) }),
+  }
+}
 
 export const jobProfileResolvers = {
   Query: {
@@ -44,7 +53,7 @@ export const jobProfileResolvers = {
         await ctx.prisma.jobProfile.updateMany({ where: { userId }, data: { isDefault: false } })
       }
       return ctx.prisma.jobProfile.create({
-        data: { ...args.input, userId },
+        data: { ...args.input, ...profileHandles(args.input), userId },
         include: { _count: { select: { applications: true, resumes: true } } },
       })
     },
@@ -56,7 +65,7 @@ export const jobProfileResolvers = {
       }
       return ctx.prisma.jobProfile.update({
         where: { id: args.id, userId },
-        data: args.input,
+        data: { ...args.input, ...profileHandles(args.input) },
         include: { _count: { select: { applications: true, resumes: true } } },
       })
     },
@@ -81,7 +90,7 @@ export const jobProfileResolvers = {
           jobProfileId: args.profileId,
           title: args.input.title || 'Untitled',
           summary: args.input.summary ?? null,
-          contactInfo: args.input.contactInfo ?? undefined,
+          contactInfo: args.input.contactInfo ? withStoredHandles(args.input.contactInfo) : undefined,
           skills: args.input.skills ?? [],
           experiences: args.input.experiences ?? [],
           educations: args.input.educations ?? [],
@@ -116,7 +125,9 @@ export const jobProfileResolvers = {
         data: {
           ...(title !== undefined && { title }),
           ...(summary !== undefined && { summary }),
-          ...(contactInfo !== undefined && { contactInfo }),
+          ...(contactInfo !== undefined && {
+            contactInfo: contactInfo ? withStoredHandles(contactInfo) : contactInfo,
+          }),
           ...(skills !== undefined && { skills }),
           ...(experiences !== undefined && { experiences }),
           ...(educations !== undefined && { educations }),

@@ -1,5 +1,7 @@
 'use client'
 import { useMutation } from '@apollo/client/react'
+import { SocialHandleInput } from '@/components/SocialHandleInput'
+import { extractHandle, isValidHandle, toStoredHandle, type SocialNetwork } from '@/lib/social-profiles'
 import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -25,14 +27,21 @@ interface Props {
   profile: any
 }
 
+/** Blocks submit on a value that cannot be a handle; the input shows why. */
+const validHandle = (network: SocialNetwork) => (value: string) => {
+  const handle = extractHandle(network, value)
+  return !handle || isValidHandle(network, handle)
+}
+
 export function ProfileInfoTab({ profile }: Props) {
   const { register, handleSubmit, watch, setValue, formState: { isDirty } } = useForm<ProfileForm>({
     defaultValues: {
       name: profile.name ?? '',
       email: profile.email ?? '',
-      linkedin: profile.linkedin ?? '',
+      // Older profiles may hold full URLs; edit them as handles.
+      linkedin: extractHandle('linkedin', profile.linkedin),
       phone: profile.phone ?? '',
-      github: profile.github ?? '',
+      github: extractHandle('github', profile.github),
       address: profile.address ?? '',
       description: profile.description ?? '',
       details: profile.details ?? '',
@@ -55,9 +64,9 @@ export function ProfileInfoTab({ profile }: Props) {
         id: profile.id,
         input: {
           ...data,
-          linkedin: data.linkedin || null,
+          linkedin: toStoredHandle('linkedin', data.linkedin),
           phone: data.phone || null,
-          github: data.github || null,
+          github: toStoredHandle('github', data.github),
           address: data.address || null,
           description: data.description || null,
         },
@@ -75,14 +84,14 @@ export function ProfileInfoTab({ profile }: Props) {
         <Label>Email *</Label>
         <Input {...register('email', { required: true })} type="email" placeholder="you@example.com" />
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid gap-3">
         <div className="grid gap-1.5">
           <Label>LinkedIn <span className="text-xs text-muted-foreground font-normal">(optional)</span></Label>
-          <Input {...register('linkedin')} placeholder="https://linkedin.com/in/..." />
+          <SocialHandleInput network="linkedin" {...register('linkedin', { validate: validHandle('linkedin') })} />
         </div>
         <div className="grid gap-1.5">
           <Label>GitHub <span className="text-xs text-muted-foreground font-normal">(optional)</span></Label>
-          <Input {...register('github')} placeholder="https://github.com/..." />
+          <SocialHandleInput network="github" {...register('github', { validate: validHandle('github') })} />
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
