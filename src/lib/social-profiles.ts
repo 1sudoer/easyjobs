@@ -62,18 +62,33 @@ export function isValidHandle(network: SocialNetwork, handle: string): boolean {
   return NETWORKS[network].handlePattern.test(handle);
 }
 
-/** The printed address and link for a stored value, or null when there is none. */
+/**
+ * The printed address and link for a stored value, or null when there is none.
+ *
+ * A valid handle becomes the profile address. Anything else (a value saved
+ * before handles were enforced that is not a profile URL, such as
+ * "linkedin.com/company/acme") is shown as written, linked only when it is a
+ * web address, rather than being glued onto the profile prefix.
+ */
 export function socialProfile(
   network: SocialNetwork,
   value: string | null | undefined,
-): { handle: string; label: string; href: string } | null {
+): { label: string; href?: string } | null {
   const handle = extractHandle(network, value);
   if (!handle) return null;
-  const { displayPrefix, urlPrefix } = NETWORKS[network];
+  if (isValidHandle(network, handle)) {
+    const { displayPrefix, urlPrefix } = NETWORKS[network];
+    return {
+      label: `${displayPrefix}${handle}`,
+      href: `${urlPrefix}${encodeURIComponent(handle)}`,
+    };
+  }
+  const raw = value!.trim();
+  const isUrl = /^https?:\/\//i.test(raw);
+  const isBareUrl = !isUrl && /^[\w-]+(\.[\w-]+)+\//.test(raw);
   return {
-    handle,
-    label: `${displayPrefix}${handle}`,
-    href: `${urlPrefix}${encodeURIComponent(handle)}`,
+    label: raw.replace(/^https?:\/\//i, "").replace(/^www\./i, "").replace(/\/+$/, ""),
+    href: isUrl ? raw : isBareUrl ? `https://${raw}` : undefined,
   };
 }
 

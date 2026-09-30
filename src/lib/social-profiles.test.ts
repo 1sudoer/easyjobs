@@ -34,10 +34,21 @@ test("validation and display", () => {
   expect(isValidHandle("linkedin", "张伟-123")).toBe(true);
   expect(isValidHandle("linkedin", "https:")).toBe(false);
   expect(socialProfile("linkedin", "https://www.linkedin.com/in/jordantaylor/")).toEqual({
-    handle: "jordantaylor",
     label: "linkedin.com/in/jordantaylor",
     href: "https://www.linkedin.com/in/jordantaylor",
   });
   expect(socialProfile("github", "jtaylor")?.label).toBe("github.com/jtaylor");
   expect(socialProfile("github", "")).toBeNull();
+});
+
+test("a stored value that is not a handle is shown as written, not glued onto the prefix", () => {
+  expect(socialProfile("linkedin", "https://www.linkedin.com/wattmood")).toEqual({
+    label: "linkedin.com/wattmood",
+    href: "https://www.linkedin.com/wattmood",
+  });
+  expect(socialProfile("linkedin", "linkedin.com/company/acme")).toEqual({
+    label: "linkedin.com/company/acme",
+    href: "https://linkedin.com/company/acme",
+  });
+  expect(socialProfile("github", "not a handle")).toEqual({ label: "not a handle", href: undefined });
 });
