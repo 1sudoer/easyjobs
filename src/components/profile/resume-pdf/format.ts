@@ -58,7 +58,8 @@ export type ContactItem = { label: string; href?: string };
 
 /**
  * The contact line in print order: location, phone, email, LinkedIn, GitHub.
- * Profiles are stored as handles and printed as their full addresses.
+ * Profiles are stored as handles and printed as "LinkedIn" / "GitHub" links to
+ * the full profile address.
  */
 export function contactItems(contactInfo: {
   email?: string;
@@ -75,7 +76,7 @@ export function contactItems(contactInfo: {
     contactInfo.address?.trim() ? { label: contactInfo.address.trim() } : null,
     phone ? { label: phone, href: `tel:${phone.replace(/[^\d+]/g, "")}` } : null,
     email ? { label: email, href: `mailto:${email}` } : null,
-    linkedin ? { label: linkedin.label, href: linkedin.href } : null,
-    github ? { label: github.label, href: github.href } : null,
+    linkedin ? { label: "LinkedIn", href: linkedin.href } : null,
+    github ? { label: "GitHub", href: github.href } : null,
   ].filter((item): item is ContactItem => item !== null);
 }
