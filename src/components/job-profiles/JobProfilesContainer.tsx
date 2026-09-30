@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { JOB_PROFILES_QUERY, DELETE_JOB_PROFILE } from '@/lib/graphql/queries'
 import { ProfileDialog } from './ProfileDialog'
+import { ProfileCreator } from './ProfileCreator'
 
 export function JobProfilesContainer() {
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -23,7 +24,9 @@ export function JobProfilesContainer() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Job Profiles</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Apply to different jobs with different profiles</p>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Apply to different jobs with different profiles. Profiles are shared: everyone signed in can view and edit them.
+          </p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
@@ -83,6 +86,8 @@ export function JobProfilesContainer() {
                 {p.phone && <span>{p.phone}</span>}
               </div>
 
+              <ProfileCreator owner={p.owner} isOwner={p.isOwner} />
+
               <div className="flex items-center justify-between pt-1">
                 <Link href={`/dashboard/job-profiles/${p.id}`}>
                   <Button variant="outline" size="sm" className="gap-1 text-xs h-7">
@@ -90,14 +95,18 @@ export function JobProfilesContainer() {
                     <ChevronRight className="h-3 w-3" />
                   </Button>
                 </Link>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-destructive hover:text-destructive"
-                  onClick={() => deleteProfile({ variables: { id: p.id } })}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
+                {/* Anyone can edit a shared profile; only its creator can delete it. */}
+                {p.isOwner && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-destructive hover:text-destructive"
+                    aria-label={`Delete ${p.name}`}
+                    onClick={() => deleteProfile({ variables: { id: p.id } })}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                )}
               </div>
             </div>
           ))}

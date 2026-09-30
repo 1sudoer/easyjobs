@@ -357,6 +357,12 @@ export const JOB_PROFILE_QUERY = gql`
       isDefault
       applicationCount
       resumeDraftCount
+      owner {
+        id
+        name
+        imageUrl
+      }
+      isOwner
       createdAt
       updatedAt
     }
@@ -378,6 +384,12 @@ export const JOB_PROFILES_QUERY = gql`
       isDefault
       applicationCount
       resumeDraftCount
+      owner {
+        id
+        name
+        imageUrl
+      }
+      isOwner
       createdAt
     }
   }
@@ -395,6 +407,7 @@ const RESUME_DRAFT_FIELDS = /* GraphQL */ `
   projects
   certifications
   sectionOrder
+  canDelete
   createdAt
   updatedAt
 `
@@ -477,6 +490,12 @@ export const UPDATE_JOB_PROFILE = gql`
       description
       details
       isDefault
+      owner {
+        id
+        name
+        imageUrl
+      }
+      isOwner
     }
   }
 `

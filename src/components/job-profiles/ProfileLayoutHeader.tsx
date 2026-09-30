@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { JOB_PROFILE_QUERY } from '@/lib/graphql/queries'
+import { ProfileCreator } from './ProfileCreator'
 
 export function ProfileLayoutHeader() {
   const { id: profileId } = useParams<{ id: string }>()
@@ -46,6 +47,7 @@ export function ProfileLayoutHeader() {
           {profile.description && (
             <p className="text-sm text-muted-foreground">{profile.description}</p>
           )}
+          <ProfileCreator owner={profile.owner} isOwner={profile.isOwner} className="pt-1" />
         </div>
       ) : null}
 
