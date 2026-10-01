@@ -237,7 +237,7 @@ model JobPostTag {
 }
 
 model JobProfile {
-  id           String           @id @default(uuid())
+  id           String              @id @default(uuid())
   userId       String
   name         String
   email        String
@@ -247,13 +247,24 @@ model JobProfile {
   address      String?
   description  String?
   details      String
-  isDefault    Boolean          @default(false)
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
   applications JobApplication[]
   resumes      Resume[]
+  defaultFor   JobProfileDefault[]
 
   @@index([userId])
+}
+
+/// Each user's own default job profile. Profiles are shared by every signed-in
+/// user, so which one is "default" is a per-user choice, not part of the profile.
+model JobProfileDefault {
+  userId       String     @id
+  jobProfileId String
+  jobProfile   JobProfile @relation(fields: [jobProfileId], references: [id], onDelete: Cascade)
+  updatedAt    DateTime   @updatedAt
+
+  @@index([jobProfileId])
 }
 
 model JobApplication {

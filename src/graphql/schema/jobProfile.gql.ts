@@ -9,11 +9,23 @@ export const jobProfileTypeDefs = /* GraphQL */ `
     address: String
     description: String
     details: String!
+    "Whether this is the signed-in user's own default profile."
     isDefault: Boolean!
     createdAt: String!
     updatedAt: String!
+    "The signed-in user's applications that use this profile."
     applicationCount: Int!
     resumeDraftCount: Int!
+    "Who created the profile. Every signed-in user can view and edit it."
+    owner: UserSummary!
+    "Whether the signed-in user created it; only the creator may delete it."
+    isOwner: Boolean!
+  }
+
+  type UserSummary {
+    id: ID!
+    name: String!
+    imageUrl: String
   }
 
   type ResumeDraft {
@@ -30,6 +42,8 @@ export const jobProfileTypeDefs = /* GraphQL */ `
     sectionOrder: [String!]!
     createdAt: String!
     updatedAt: String!
+    "Whether the signed-in user may delete it: its author or the profile's creator."
+    canDelete: Boolean!
   }
 
   input ResumeDraftInput {
