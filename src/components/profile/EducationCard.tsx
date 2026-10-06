@@ -1,13 +1,10 @@
 "use client";
 import { Education } from "@/models/profile.model";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
-import { Edit, Trash2 } from "lucide-react";
-import { TipTapContentViewer } from "../TipTapContentViewer";
-import { useState, useTransition, type ReactNode } from "react";
+import { useState, useTransition } from "react";
 import { deleteEducation } from "@/actions/profile.actions";
 import { toast } from "../ui/use-toast";
-import { DragHandle, SortableList } from "./SortableList";
+import { SortableList } from "./SortableList";
+import { EntryCard } from "./EntryCard";
 import { SectionHeaderRow } from "./SectionHeaderRow";
 import AddEducation from "./AddEducation";
 
@@ -17,11 +14,9 @@ interface EducationCardProps {
   resumeId: string;
   educations: Education[];
   onLocalChange?: (educations: Education[]) => void;
-  /** Grip for reordering the whole section. */
-  dragHandle?: ReactNode;
 }
 
-function EducationCard({ resumeId, educations, onLocalChange, dragHandle }: EducationCardProps) {
+function EducationCard({ resumeId, educations, onLocalChange }: EducationCardProps) {
   const [action, setAction] = useState<ActiveAction>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -57,7 +52,7 @@ function EducationCard({ resumeId, educations, onLocalChange, dragHandle }: Educ
 
   return (
     <>
-      <SectionHeaderRow title="Education" onAdd={toggleAdd} dragHandle={dragHandle} />
+      <SectionHeaderRow title="Education" onAction={toggleAdd} />
 
       <SortableList
         items={educations}
@@ -82,50 +77,20 @@ function EducationCard({ resumeId, educations, onLocalChange, dragHandle }: Educ
           );
         }
 
+        const degree = [edu.degree, edu.fieldOfStudy].filter(Boolean).join(", ");
+        const years = [edu.startDate, edu.endDate || "Present"].filter(Boolean).join(" – ");
+
         return (
-          <Card key={cardKey}>
-            <CardHeader className="p-2 pb-0 flex-row justify-between relative">
-              <div className="flex min-w-0 items-center gap-1 pr-16">
-                <DragHandle handle={handle} label={edu.institution} />
-                <CardTitle className="text-xl">{edu.institution}</CardTitle>
-              </div>
-              <div className="flex gap-0.5 absolute top-0 right-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0"
-                  onClick={() => toggleEdit(index)}
-                >
-                  <Edit className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                  disabled={isPending}
-                  onClick={() => handleDelete(index)}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <h3>
-                {edu.degree}, {edu.fieldOfStudy}
-              </h3>
-              <CardDescription>
-                {edu.startDate} – {edu.endDate ? edu.endDate : "Present"}
-                {edu.cgpa && <> · GPA: {edu.cgpa}</>}
-                <br />
-                {edu.location}
-              </CardDescription>
-              {edu.description && (
-                <div className="pt-2">
-                  <TipTapContentViewer content={edu.description} />
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <EntryCard
+            handle={handle}
+            name={edu.institution}
+            title={edu.institution}
+            subtitle={[degree, edu.cgpa ? `GPA ${edu.cgpa}` : null].filter(Boolean).join(" · ")}
+            details={[years, edu.location].filter(Boolean).join(" · ")}
+            onEdit={() => toggleEdit(index)}
+            onDelete={() => handleDelete(index)}
+            deleteDisabled={isPending}
+          />
         );
         }}
       />

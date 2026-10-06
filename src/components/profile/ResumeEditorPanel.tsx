@@ -1,5 +1,5 @@
 "use client";
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import {
   ContactInfo,
   Education,
@@ -9,11 +9,11 @@ import {
   ResumeSection,
   SkillCategory,
   WorkExperience,
-  resolveSectionOrder,
+  RESUME_SECTIONS,
 } from "@/models/profile.model";
-import AddResumeSection, { SectionKey } from "./AddResumeSection";
 import { SectionHeaderRow } from "./SectionHeaderRow";
-import { DragHandle, SortableList } from "./SortableList";
+import { SectionLayoutPanel } from "./SectionLayoutPanel";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import ContactInfoCard from "./ContactInfoCard";
 import SummarySectionCard from "./SummarySectionCard";
 import SkillsCard from "./SkillsCard";
@@ -26,14 +26,8 @@ import AddResumeSummary from "./AddResumeSummary";
 import AddSkills from "./AddSkills";
 import AddCertification from "./AddCertification";
 
-const SECTION_TITLES: Record<ResumeSection, string> = {
-  summary: "Summary",
-  skills: "Skills",
-  experience: "Experience",
-  project: "Projects",
-  education: "Education",
-  certification: "Certifications",
-};
+/** Contact info plus the sections that can be reordered. */
+type SectionKey = "contactInfo" | ResumeSection;
 
 type ActiveForm =
   | { type: "contactInfo"; index?: undefined }
@@ -58,32 +52,11 @@ export function ResumeEditorPanel({
 }: ResumeEditorPanelProps) {
   const [activeForm, setActiveForm] = useState<ActiveForm | null>(null);
 
-  const [addedSections, setAddedSections] = useState<Set<SectionKey>>(() => {
-    const s = new Set<SectionKey>();
-    if (localResume.contactInfo) s.add("contactInfo");
-    if (localResume.summary) s.add("summary");
-    if (localResume.skills?.length) s.add("skills");
-    if (localResume.experiences?.length) s.add("experience");
-    if (localResume.projects?.length) s.add("project");
-    if (localResume.educations?.length) s.add("education");
-    if (localResume.certifications?.length) s.add("certification");
-    return s;
-  });
+  const [tab, setTab] = useState<"content" | "layout">("content");
 
   const { contactInfo, summary, skills, experiences, projects, educations, certifications } =
     localResume;
 
-  const sectionOrder = resolveSectionOrder(localResume.sectionOrder);
-  const visibleSections = sectionOrder.filter((section) => addedSections.has(section));
-
-  // Sections not added yet keep their place after the visible ones.
-  const reorderSections = (next: ResumeSection[]) =>
-    updateLocal({
-      sectionOrder: [...next, ...sectionOrder.filter((section) => !next.includes(section))],
-    });
-
-  const addSection = (section: SectionKey) =>
-    setAddedSections((prev) => new Set([...prev, section]));
 
   const toggleForm = (section: SectionKey, index?: number) =>
     setActiveForm((prev) =>
@@ -97,8 +70,8 @@ export function ResumeEditorPanel({
 
   const closeForm = () => setActiveForm(null);
 
-  /** One section of the editor, with `dragHandle` placed in its header. */
-  const renderSection = (section: ResumeSection, dragHandle: ReactNode) => {
+  /** One section of the Content tab. */
+  const renderSection = (section: ResumeSection) => {
     switch (section) {
       case "summary":
         return (
@@ -108,13 +81,11 @@ export function ResumeEditorPanel({
                 <SummarySectionCard
                   summary={summary}
                   onEdit={() => openForm("summary")}
-                  dragHandle={dragHandle}
                 />
               ) : (
                 <SectionHeaderRow
                   title="Summary"
-                  onAdd={() => toggleForm("summary")}
-                  dragHandle={dragHandle}
+                  onAction={() => toggleForm("summary")}
                 />
               ))}
             {activeForm?.type === "summary" && (
@@ -142,7 +113,6 @@ export function ResumeEditorPanel({
               onReorder={(next: SkillCategory[]) => updateLocal({ skills: next })}
               // The form edits by index, so the order must hold while it is open.
               reorderDisabled={activeForm?.type === "skills"}
-              dragHandle={dragHandle}
             />
             {activeForm?.type === "skills" && (
               <AddSkills
@@ -170,7 +140,6 @@ export function ResumeEditorPanel({
             resumeId={resumeId ?? ""}
             experiences={experiences ?? []}
             onLocalChange={(exps: WorkExperience[]) => updateLocal({ experiences: exps })}
-            dragHandle={dragHandle}
           />
         );
 
@@ -180,7 +149,6 @@ export function ResumeEditorPanel({
             resumeId={resumeId ?? ""}
             projects={projects ?? []}
             onLocalChange={(next: Project[]) => updateLocal({ projects: next })}
-            dragHandle={dragHandle}
           />
         );
 
@@ -190,7 +158,6 @@ export function ResumeEditorPanel({
             resumeId={resumeId ?? ""}
             educations={educations ?? []}
             onLocalChange={(edus: Education[]) => updateLocal({ educations: edus })}
-            dragHandle={dragHandle}
           />
         );
 
@@ -201,11 +168,15 @@ export function ResumeEditorPanel({
               certifications={certifications ?? []}
               onEdit={(index: number) => openForm("certification", index)}
               onAdd={() => toggleForm("certification")}
+              onDelete={(index: number) =>
+                updateLocal({
+                  certifications: (certifications ?? []).filter((_, i) => i !== index),
+                })
+              }
               onReorder={(next: LicenseOrCertification[]) =>
                 updateLocal({ certifications: next })
               }
               reorderDisabled={activeForm?.type === "certification"}
-              dragHandle={dragHandle}
             />
             {activeForm?.type === "certification" && (
               <AddCertification
@@ -230,62 +201,50 @@ export function ResumeEditorPanel({
   };
 
   return (
-    <div className="w-[380px] xl:w-[430px] shrink-0 flex flex-col gap-3 min-h-0">
-      {/* Panel header */}
-      <div className="flex items-center justify-between shrink-0">
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-          Editor
-        </span>
-        <AddResumeSection addedSections={addedSections} onOpen={addSection} />
-      </div>
+    <Tabs
+      value={tab}
+      onValueChange={(value) => setTab(value as "content" | "layout")}
+      className="w-[380px] xl:w-[430px] shrink-0 flex flex-col gap-3 min-h-0"
+    >
+      <TabsList className="grid w-full grid-cols-2 shrink-0">
+        <TabsTrigger value="content">Content</TabsTrigger>
+        <TabsTrigger value="layout">Layout</TabsTrigger>
+      </TabsList>
 
-      {/* Scrollable sections */}
-      <div className="flex-1 overflow-y-auto space-y-3 pr-1">
-
+      {/* Every section is always listed, in a fixed order so the editor never
+          shifts under the user; the Layout tab sets the order they print in.
+          Entries inside a section are still reordered by dragging. */}
+      <TabsContent value="content" className="mt-0 flex-1 overflow-y-auto space-y-3 pr-1">
         {/* Contact Info */}
-        {addedSections.has("contactInfo") && (
-          <>
-            {contactInfo
-              ? activeForm?.type !== "contactInfo" && (
-                  <ContactInfoCard
-                    contactInfo={contactInfo}
-                    onEdit={() => openForm("contactInfo")}
-                  />
-                )
-              : activeForm?.type !== "contactInfo" && (
-                  <SectionHeaderRow
-                    title="Contact Info"
-                    onAdd={() => toggleForm("contactInfo")}
-                  />
-                )}
-            {activeForm?.type === "contactInfo" && (
-              <AddContactInfo
-                resumeId={resumeId}
-                contactInfoToEdit={contactInfo}
-                onClose={closeForm}
-                onLocalSave={(info: ContactInfo) => updateLocal({ contactInfo: info })}
-              />
-            )}
-          </>
+        {activeForm?.type !== "contactInfo" &&
+          (contactInfo ? (
+            <ContactInfoCard contactInfo={contactInfo} onEdit={() => openForm("contactInfo")} />
+          ) : (
+            <SectionHeaderRow title="Contact Info" onAction={() => toggleForm("contactInfo")} />
+          ))}
+        {activeForm?.type === "contactInfo" && (
+          <AddContactInfo
+            resumeId={resumeId}
+            contactInfoToEdit={contactInfo}
+            onClose={closeForm}
+            onLocalSave={(info: ContactInfo) => updateLocal({ contactInfo: info })}
+          />
         )}
 
-        {/* Every other section, in the resume's order and draggable by its header. */}
-        <SortableList
-          items={visibleSections}
-          getKey={(section) => section}
-          onReorder={reorderSections}
-          className="space-y-3"
-          renderItem={(section, _index, handle) => (
-            // A section can be several siblings (header, entries, open form).
-            <div className="space-y-3">
-              {renderSection(
-                section,
-                <DragHandle handle={handle} label={`${SECTION_TITLES[section]} section`} />,
-              )}
-            </div>
-          )}
+        {RESUME_SECTIONS.map((section) => (
+          // A section can be several siblings (header, entries, open form).
+          <div key={section} className="space-y-3">
+            {renderSection(section)}
+          </div>
+        ))}
+      </TabsContent>
+
+      <TabsContent value="layout" className="mt-0 flex-1 overflow-y-auto pr-1">
+        <SectionLayoutPanel
+          resume={localResume}
+          onChange={(next) => updateLocal({ sectionOrder: next })}
         />
-      </div>
-    </div>
+      </TabsContent>
+    </Tabs>
   );
 }

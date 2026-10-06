@@ -126,7 +126,9 @@ const SkillsSection = memo(function SkillsSection({
   return (
     <Section title="Skills" theme={theme}>
       {categories.map((category, i) => (
-        <Text key={i} style={styles.skillRow} orphans={2} widows={2}>
+        // The section may break across pages, but a category never splits:
+        // it moves to the next page whole, as list items do.
+        <Text key={i} style={styles.skillRow} wrap={false}>
           {category.label?.trim() ? (
             <Text style={styles.bold}>{category.label.trim()}: </Text>
           ) : null}

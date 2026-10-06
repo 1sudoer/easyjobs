@@ -1,27 +1,31 @@
-import type { ReactNode } from "react";
-import { Plus } from "lucide-react";
+import { Edit, Plus } from "lucide-react";
 import { Button } from "../ui/button";
 
 interface SectionHeaderRowProps {
   title: string;
-  onAdd: () => void;
-  /** Grip for reordering the whole section, shown before the title. */
-  dragHandle?: ReactNode;
+  onAction: () => void;
+  /** "Add" for a list section or an empty one; "Edit" for a filled single-value section. */
+  actionLabel?: "Add" | "Edit";
 }
 
-/** A section's title with an Add button: the header of a list section, or the whole row of an empty one. */
-export function SectionHeaderRow({ title, onAdd, dragHandle }: SectionHeaderRowProps) {
+/**
+ * A section's title with its action button. Every section in the editor opens
+ * with one, so they all read the same; entries follow as `EntryCard`s.
+ */
+export function SectionHeaderRow({ title, onAction, actionLabel = "Add" }: SectionHeaderRowProps) {
+  const Icon = actionLabel === "Edit" ? Edit : Plus;
   return (
-    <div
-      className={`flex items-center justify-between pr-1 py-1 ${dragHandle ? "pl-1" : "pl-4"}`}
-    >
-      <div className="flex items-center gap-1">
-        {dragHandle}
-        <span className="text-sm font-semibold">{title}</span>
-      </div>
-      <Button variant="ghost" size="sm" className="h-7 gap-1" onClick={onAdd}>
-        <Plus className="h-3.5 w-3.5" />
-        <span className="sr-only sm:not-sr-only sm:whitespace-nowrap text-xs">Add</span>
+    <div className="flex items-center justify-between pl-4 pr-1 py-1">
+      <span className="text-sm font-semibold">{title}</span>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-7 gap-1"
+        aria-label={`${actionLabel} ${title}`}
+        onClick={onAction}
+      >
+        <Icon className="h-3.5 w-3.5" />
+        <span className="sr-only sm:not-sr-only sm:whitespace-nowrap text-xs">{actionLabel}</span>
       </Button>
     </div>
   );

@@ -1,13 +1,11 @@
 "use client";
 import { Project } from "@/models/profile.model";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
-import { Edit, ExternalLink, Github, Trash2 } from "lucide-react";
-import { TipTapContentViewer } from "../TipTapContentViewer";
-import { useState, useTransition, type ReactNode } from "react";
+import { useState, useTransition } from "react";
 import { deleteProject } from "@/actions/profile.actions";
 import { toast } from "../ui/use-toast";
-import { DragHandle, SortableList } from "./SortableList";
+import { SortableList } from "./SortableList";
+import { EntryCard } from "./EntryCard";
+import { displayUrl } from "./resume-pdf/format";
 import { SectionHeaderRow } from "./SectionHeaderRow";
 import AddProject from "./AddProject";
 
@@ -17,11 +15,9 @@ interface ProjectCardProps {
   resumeId: string;
   projects: Project[];
   onLocalChange?: (projects: Project[]) => void;
-  /** Grip for reordering the whole section. */
-  dragHandle?: ReactNode;
 }
 
-function ProjectCard({ resumeId, projects, onLocalChange, dragHandle }: ProjectCardProps) {
+function ProjectCard({ resumeId, projects, onLocalChange }: ProjectCardProps) {
   const [action, setAction] = useState<ActiveAction>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -57,7 +53,7 @@ function ProjectCard({ resumeId, projects, onLocalChange, dragHandle }: ProjectC
 
   return (
     <>
-      <SectionHeaderRow title="Projects" onAdd={toggleAdd} dragHandle={dragHandle} />
+      <SectionHeaderRow title="Projects" onAction={toggleAdd} />
 
       <SortableList
         items={projects}
@@ -85,70 +81,22 @@ function ProjectCard({ resumeId, projects, onLocalChange, dragHandle }: ProjectC
         const dates = [project.startDate, project.current ? "Present" : project.endDate]
           .filter(Boolean)
           .join(" – ");
+        const links = [project.url, project.githubUrl]
+          .map((link) => link?.trim())
+          .filter((link): link is string => Boolean(link))
+          .map(displayUrl);
 
         return (
-          <Card key={cardKey}>
-            <CardHeader className="p-2 pb-0 flex-row justify-between relative">
-              <div className="flex min-w-0 items-center gap-1 pr-16">
-                <DragHandle handle={handle} label={project.name} />
-                <CardTitle className="text-xl">{project.name}</CardTitle>
-              </div>
-              <div className="flex gap-0.5 absolute top-0 right-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0"
-                  onClick={() => toggleEdit(index)}
-                >
-                  <Edit className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                  disabled={isPending}
-                  onClick={() => handleDelete(index)}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {project.technologies?.length ? (
-                <h3>{project.technologies.join(", ")}</h3>
-              ) : null}
-              {dates && <CardDescription>{dates}</CardDescription>}
-              {(project.url || project.githubUrl) && (
-                <div className="flex flex-wrap gap-3 mt-1">
-                  {project.url && (
-                    <a
-                      href={project.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-sm text-blue-500 hover:underline"
-                    >
-                      Live
-                      <ExternalLink className="h-3.5 w-3.5" />
-                    </a>
-                  )}
-                  {project.githubUrl && (
-                    <a
-                      href={project.githubUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-sm text-blue-500 hover:underline"
-                    >
-                      Repository
-                      <Github className="h-3.5 w-3.5" />
-                    </a>
-                  )}
-                </div>
-              )}
-              <div className="pt-2">
-                <TipTapContentViewer content={project.description ?? ""} />
-              </div>
-            </CardContent>
-          </Card>
+          <EntryCard
+            handle={handle}
+            name={project.name}
+            title={project.name}
+            subtitle={project.technologies?.length ? project.technologies.join(", ") : undefined}
+            details={[dates, ...links].filter(Boolean).join(" · ")}
+            onEdit={() => toggleEdit(index)}
+            onDelete={() => handleDelete(index)}
+            deleteDisabled={isPending}
+          />
         );
         }}
       />
