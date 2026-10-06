@@ -2,9 +2,8 @@
 import dynamic from "next/dynamic";
 
 /**
- * The live preview, rendered in the browser only: rich text is parsed with
- * `DOMParser`, which the server does not have, so a server render would not
- * match the client's.
+ * The live preview, rendered in the browser only: it builds the PDF with
+ * react-pdf and draws it with pdf.js, neither of which runs on the server.
  */
 export const ResumePreviewPanel = dynamic(
   () => import("./ResumePreviewPanel").then((m) => ({ default: m.ResumePreviewPanel })),

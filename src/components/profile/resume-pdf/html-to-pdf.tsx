@@ -48,6 +48,13 @@ const BLOCK_TAGS = new Set([
   "ul",
 ]);
 
+/**
+ * Longest list item that always moves to the next page whole: about half a
+ * page of 10pt text. Real bullets are far shorter; one past this may split,
+ * so that an item taller than a page is never clipped.
+ */
+const MAX_UNSPLIT_LIST_ITEM_CHARS = 2500;
+
 type InheritedStyle = {
   bold?: boolean;
   italic?: boolean;
@@ -266,11 +273,14 @@ function renderList(
     const body = renderBlocks(li, theme, inherited, itemKey, styles.listText);
     if (body.length === 0) return;
     rows.push(
-      // No `wrap={false}` here: a bullet longer than the space left on the page
-      // has to be allowed to continue onto the next one.
+      // A bullet moves to the next page as a whole. The marker and the text sit
+      // side by side, so a split row could leave the marker alone at the foot
+      // of a page while orphan control carries its text over. Only a bullet
+      // too long to fit on a page may still split, so nothing is ever clipped.
       <View
         key={itemKey}
         style={styles.listRow}
+        wrap={(li.textContent?.length ?? 0) > MAX_UNSPLIT_LIST_ITEM_CHARS}
         minPresenceAhead={breaks.listRow}
       >
         <Text style={styles.bullet}>{ordered ? `${start + i}.` : "\u2022"}</Text>

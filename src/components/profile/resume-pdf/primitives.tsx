@@ -17,7 +17,12 @@ export { DEFAULT_DOCUMENT_SETTINGS, type ResumeDocumentSettings };
  * space left on the page must still be able to continue onto the next one.
  */
 export type ResumeBreakBudget = {
-  /** Keeps a section title from landing alone under the last line of a page. */
+  /**
+   * Keeps a section title from landing alone under the last line of a page.
+   * Must exceed what the first entry needs to stay on the page itself (its
+   * two header lines plus `entryHeader`), or the entry moves on and leaves
+   * the title behind.
+   */
   sectionHeading: number;
   /** Keeps an entry's title/meta lines attached to its first line of content. */
   entryHeader: number;
@@ -31,7 +36,7 @@ export type ResumeBreakBudget = {
 };
 
 export const DEFAULT_BREAK_BUDGET: ResumeBreakBudget = {
-  sectionHeading: 48,
+  sectionHeading: 64,
   entryHeader: 28,
   listRow: 0,
 };

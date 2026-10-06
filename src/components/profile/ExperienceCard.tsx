@@ -1,13 +1,11 @@
 "use client";
 import { WorkExperience } from "@/models/profile.model";
-import { Card } from "../ui/card";
-import { Button } from "../ui/button";
-import { Edit, Trash2 } from "lucide-react";
-import { useState, useTransition, type ReactNode } from "react";
+import { useState, useTransition } from "react";
 import { deleteExperience } from "@/actions/profile.actions";
 import { toast } from "../ui/use-toast";
 import AddExperience from "./AddExperience";
-import { DragHandle, SortableList } from "./SortableList";
+import { SortableList } from "./SortableList";
+import { EntryCard } from "./EntryCard";
 import { SectionHeaderRow } from "./SectionHeaderRow";
 
 /** The year of a free-text date such as "Jan 2022"; the text itself when it has none. */
@@ -28,11 +26,9 @@ interface ExperienceCardProps {
   resumeId: string;
   experiences: WorkExperience[];
   onLocalChange?: (experiences: WorkExperience[]) => void;
-  /** Grip for reordering the whole section. */
-  dragHandle?: ReactNode;
 }
 
-function ExperienceCard({ resumeId, experiences, onLocalChange, dragHandle }: ExperienceCardProps) {
+function ExperienceCard({ resumeId, experiences, onLocalChange }: ExperienceCardProps) {
   const [action, setAction] = useState<ActiveAction>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -68,7 +64,7 @@ function ExperienceCard({ resumeId, experiences, onLocalChange, dragHandle }: Ex
 
   return (
     <>
-      <SectionHeaderRow title="Experience" onAdd={toggleAdd} dragHandle={dragHandle} />
+      <SectionHeaderRow title="Experience" onAction={toggleAdd} />
 
       <SortableList
         items={experiences}
@@ -93,41 +89,16 @@ function ExperienceCard({ resumeId, experiences, onLocalChange, dragHandle }: Ex
           const details = [yearRange(exp), exp.location?.trim()].filter(Boolean).join(" · ");
 
           return (
-            <Card className="group flex items-start gap-1 py-2 pl-1 pr-1">
-              <DragHandle
-                handle={handle}
-                label={exp.company || exp.jobTitle}
-                className="mt-0.5"
-              />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold">{exp.company}</p>
-                <p className="truncate text-sm">{exp.jobTitle}</p>
-                {details && (
-                  <p className="truncate text-xs text-muted-foreground">{details}</p>
-                )}
-              </div>
-              <div className="flex shrink-0 gap-0.5">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 w-7 p-0"
-                  aria-label={`Edit ${exp.company || exp.jobTitle}`}
-                  onClick={() => toggleEdit(index)}
-                >
-                  <Edit className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 w-7 p-0 text-destructive hover:text-destructive"
-                  aria-label={`Delete ${exp.company || exp.jobTitle}`}
-                  disabled={isPending}
-                  onClick={() => handleDelete(index)}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            </Card>
+            <EntryCard
+              handle={handle}
+              name={exp.company || exp.jobTitle}
+              title={exp.company}
+              subtitle={exp.jobTitle}
+              details={details}
+              onEdit={() => toggleEdit(index)}
+              onDelete={() => handleDelete(index)}
+              deleteDisabled={isPending}
+            />
           );
         }}
       />
