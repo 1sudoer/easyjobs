@@ -75,13 +75,14 @@ export function JobProfilesContainer() {
               {p.description && <p className="text-xs text-muted-foreground line-clamp-2">{p.description}</p>}
 
               <div className="flex flex-wrap gap-x-3 text-xs text-muted-foreground">
-                {[socialProfile('linkedin', p.linkedin), socialProfile('github', p.github)].map(
-                  (profile) =>
-                    profile && (
-                      <a key={profile.href} href={profile.href} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                        {profile.label}
-                      </a>
-                    ),
+                {[socialProfile('linkedin', p.linkedin), socialProfile('github', p.github)].map((profile) =>
+                  profile?.href ? (
+                    <a key={profile.label} href={profile.href} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                      {profile.label}
+                    </a>
+                  ) : profile ? (
+                    <span key={profile.label}>{profile.label}</span>
+                  ) : null,
                 )}
                 {p.phone && <span>{p.phone}</span>}
               </div>

@@ -28,18 +28,30 @@ function ContactInfoCard({ contactInfo, onEdit }: ContactInfoCardProps) {
           {details && <CardDescription className="mt-0.5">{details}</CardDescription>}
           {profiles.length > 0 && (
             <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
-              {profiles.map(({ href, label, Icon }) => (
-                <a
-                  key={href}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex min-w-0 items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:underline"
-                >
-                  <Icon className="h-3.5 w-3.5 shrink-0" />
-                  <span className="truncate">{label}</span>
-                </a>
-              ))}
+              {profiles.map(({ href, label, Icon }) => {
+                const content = (
+                  <>
+                    <Icon className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">{label}</span>
+                  </>
+                );
+                const className = "inline-flex min-w-0 items-center gap-1 text-xs text-muted-foreground";
+                return href ? (
+                  <a
+                    key={label}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`${className} hover:text-foreground hover:underline`}
+                  >
+                    {content}
+                  </a>
+                ) : (
+                  <span key={label} className={className}>
+                    {content}
+                  </span>
+                );
+              })}
             </div>
           )}
         </div>

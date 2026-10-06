@@ -76,7 +76,8 @@ export function contactItems(contactInfo: {
     contactInfo.address?.trim() ? { label: contactInfo.address.trim() } : null,
     phone ? { label: phone, href: `tel:${phone.replace(/[^\d+]/g, "")}` } : null,
     email ? { label: email, href: `mailto:${email}` } : null,
-    linkedin ? { label: "LinkedIn", href: linkedin.href } : null,
-    github ? { label: "GitHub", href: github.href } : null,
+    // A value that is not a handle has no profile link to name; print it as is.
+    linkedin ? (linkedin.href ? { label: "LinkedIn", href: linkedin.href } : linkedin) : null,
+    github ? (github.href ? { label: "GitHub", href: github.href } : github) : null,
   ].filter((item): item is ContactItem => item !== null);
 }
