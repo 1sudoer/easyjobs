@@ -15,8 +15,8 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | JobSync",
-    default: "JobSync",
+    template: "%s | EasyJobs",
+    default: "EasyJobs",
   },
   description: "Job Application Tracking System",
 };

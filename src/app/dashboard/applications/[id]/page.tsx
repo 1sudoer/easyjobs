@@ -10,7 +10,7 @@ import { ApplicationInfoCard } from '@/components/applications/ApplicationInfoCa
 import { ApplicationQuestionsCard } from '@/components/applications/ApplicationQuestionsCard'
 import { ApplicationResumePanel } from '@/components/applications/ApplicationResumePanel'
 
-export const metadata: Metadata = { title: 'Application | JobSync' }
+export const metadata: Metadata = { title: 'Application' }
 
 export default async function ApplicationDetailPage({
   params,

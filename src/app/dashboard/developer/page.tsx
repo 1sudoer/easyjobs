@@ -6,7 +6,7 @@ import {
 } from "@/components/developer/DeveloperContainer";
 
 export const metadata: Metadata = {
-  title: "Developer Options | JobSync",
+  title: "Developer Options",
   description: "Developer tools and utilities for development mode",
 };
 

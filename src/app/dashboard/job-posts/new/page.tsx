@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 import { JobPostForm } from '@/components/job-posts/JobPostForm'
 
-export const metadata: Metadata = { title: 'New Job Post | JobSync' }
+export const metadata: Metadata = { title: 'New Job Post' }
 
 export default function NewJobPostPage() {
   return (

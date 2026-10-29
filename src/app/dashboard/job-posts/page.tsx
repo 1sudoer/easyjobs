@@ -5,7 +5,7 @@ import { getAllJobLocations } from '@/actions/jobLocation.actions'
 import { getJobPostTags } from '@/actions/jobPost.actions'
 import { Skeleton } from '@/components/ui/skeleton'
 
-export const metadata: Metadata = { title: 'Job Posts | JobSync' }
+export const metadata: Metadata = { title: 'Job Posts' }
 
 export default async function JobPostsPage() {
   const [locations, tags] = await Promise.all([
