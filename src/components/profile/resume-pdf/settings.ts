@@ -37,6 +37,8 @@ export type ResumeDocumentSettings = {
   listRowSpacing: number;
   entrySpacing: number;
   entryHeaderBottomSpacing: number;
+  /** Left indent of an entry's description, so it reads apart from the title lines. */
+  entryContentIndent: number;
   skillSpacing: number;
 };
 
@@ -63,5 +65,6 @@ export const DEFAULT_DOCUMENT_SETTINGS: ResumeDocumentSettings = {
   listRowSpacing: 1.5,
   entrySpacing: 6,
   entryHeaderBottomSpacing: 2,
+  entryContentIndent: 12,
   skillSpacing: 1.5,
 };
