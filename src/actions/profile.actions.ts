@@ -136,7 +136,6 @@ export const saveContactInfo = async (
         },
       },
     });
-    revalidatePath("/dashboard/profile/resume");
     return { data: res, success: true };
   } catch (error) {
     return handleError(error, "Failed to save contact info.");

@@ -154,7 +154,6 @@ export const addCompany = async (
         logoUrl,
       },
     });
-    revalidatePath("/dashboard/myjobs", "page");
     return { success: true, data: res };
   } catch (error) {
     const msg = "Failed to create company.";

@@ -17,23 +17,16 @@ export default function JobsAppliedCard() {
       <CardHeader className="pb-3">
         <CardTitle className="text-green-600">Dashboard</CardTitle>
         <CardDescription className="max-w-lg text-balance leading-relaxed">
-          Create new jobs and tasks.
+          Create new jobs.
         </CardDescription>
       </CardHeader>
       <CardFooter className="flex flex-col gap-2 items-start">
         <Button
           variant="outline"
-          onClick={() => router.push("/dashboard/myjobs?add-job=true")}
+          onClick={() => router.push("/dashboard/job-posts/new")}
         >
           <PlusCircle className="h-3.5 w-3.5 mr-1" />
           <span className="sm:not-sr-only sm:whitespace-nowrap">New Job</span>
-        </Button>
-        <Button
-          variant="outline"
-          onClick={() => router.push("/dashboard/tasks")}
-        >
-          <PlusCircle className="h-3.5 w-3.5 mr-1" />
-          <span className="sm:not-sr-only sm:whitespace-nowrap">New Task</span>
         </Button>
       </CardFooter>
     </Card>

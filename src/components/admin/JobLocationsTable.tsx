@@ -98,7 +98,7 @@ function JobLocationsTable({
                 <TableCell className="font-medium">
                   {location._count?.jobsApplied ? (
                     <Link
-                      href={`/dashboard/myjobs?location=${encodeURIComponent(location.value)}&applied=true`}
+                      href="/dashboard/applications"
                       className="text-primary underline-offset-4 hover:underline"
                     >
                       {location._count.jobsApplied}
@@ -120,7 +120,7 @@ function JobLocationsTable({
                       {location._count?.jobsApplied ? (
                         <DropdownMenuItem className="cursor-pointer" asChild>
                           <Link
-                            href={`/dashboard/myjobs?location=${encodeURIComponent(location.value)}&applied=true`}
+                            href="/dashboard/applications"
                           >
                             <Briefcase className="mr-2 h-4 w-4" />
                             View Jobs

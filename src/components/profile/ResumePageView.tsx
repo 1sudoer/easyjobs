@@ -123,7 +123,7 @@ export function ResumePageView({ resume }: ResumePageViewProps) {
     toast({ description: "Link copied to clipboard." });
   };
 
-  const backHref = resume.jobProfileId ? "/dashboard/job-profiles" : "/dashboard/profile";
+  const backHref = "/dashboard/job-profiles";
 
   const updateLocal = (updates: Partial<Resume>) => {
     setLocalResume((prev) => ({ ...prev, ...updates }));

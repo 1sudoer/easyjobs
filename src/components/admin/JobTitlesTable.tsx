@@ -97,7 +97,7 @@ function JobTitlesTable({ jobTitles, reloadJobTitles }: JobTitlesTableProps) {
                 <TableCell className="font-medium">
                   {title._count?.jobs ? (
                     <Link
-                      href={`/dashboard/myjobs?title=${encodeURIComponent(title.value)}&applied=true`}
+                      href="/dashboard/applications"
                       className="text-primary underline-offset-4 hover:underline"
                     >
                       {title._count.jobs}
@@ -119,7 +119,7 @@ function JobTitlesTable({ jobTitles, reloadJobTitles }: JobTitlesTableProps) {
                       {title._count?.jobs ? (
                         <DropdownMenuItem className="cursor-pointer" asChild>
                           <Link
-                            href={`/dashboard/myjobs?title=${encodeURIComponent(title.value)}&applied=true`}
+                            href="/dashboard/applications"
                           >
                             <Briefcase className="mr-2 h-4 w-4" />
                             View Jobs
