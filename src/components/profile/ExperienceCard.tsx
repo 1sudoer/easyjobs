@@ -20,7 +20,12 @@ function yearRange(exp: WorkExperience): string {
   return start ? `${start} – ${end}` : end;
 }
 
-type ActiveAction = { mode: "add" } | { mode: "edit"; index: number } | null;
+type ActiveAction =
+  | { mode: "add" }
+  | { mode: "edit"; index: number }
+  /** A new role at the company of the entry at `index`. */
+  | { mode: "role"; index: number }
+  | null;
 
 interface ExperienceCardProps {
   resumeId: string;
@@ -53,6 +58,16 @@ function ExperienceCard({ resumeId, experiences, onLocalChange }: ExperienceCard
         : [...experiences, exp],
     );
   };
+
+  // A new role goes right after the entry it was added from, so the two print as one company.
+  const handleLocalRoleSave = (insertAt: number) => (exp: WorkExperience) => {
+    onLocalChange?.([...experiences.slice(0, insertAt), exp, ...experiences.slice(insertAt)]);
+  };
+
+  const toggleRole = (index: number) =>
+    setAction((prev) =>
+      prev?.mode === "role" && prev.index === index ? null : { mode: "role", index }
+    );
 
   const toggleAdd = () =>
     setAction((prev) => (prev?.mode === "add" ? null : { mode: "add" }));
@@ -88,7 +103,8 @@ function ExperienceCard({ resumeId, experiences, onLocalChange }: ExperienceCard
 
           const details = [yearRange(exp), exp.location?.trim()].filter(Boolean).join(" · ");
 
-          return (
+          const company = exp.company?.trim();
+          const card = (
             <EntryCard
               handle={handle}
               name={exp.company || exp.jobTitle}
@@ -98,7 +114,24 @@ function ExperienceCard({ resumeId, experiences, onLocalChange }: ExperienceCard
               onEdit={() => toggleEdit(index)}
               onDelete={() => handleDelete(index)}
               deleteDisabled={isPending}
+              onAdd={company ? () => toggleRole(index) : undefined}
+              addLabel={company ? `Add another role at ${company}` : undefined}
             />
+          );
+          if (action?.mode !== "role" || action.index !== index) return card;
+
+          return (
+            <div className="space-y-2">
+              {card}
+              <AddExperience
+                resumeId={resumeId}
+                experienceIndex={undefined}
+                experiences={experiences}
+                onClose={() => setAction(null)}
+                onLocalSave={onLocalChange ? handleLocalRoleSave(index + 1) : undefined}
+                newRole={{ company: company ?? "", location: exp.location ?? "", insertAt: index + 1 }}
+              />
+            </div>
           );
         }}
       />

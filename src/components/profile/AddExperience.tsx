@@ -26,9 +26,18 @@ export type AddExperienceProps = {
   experiences: WorkExperience[] | undefined;
   onClose: () => void;
   onLocalSave?: (exp: WorkExperience, index?: number) => void;
+  /** A new role at an existing company: the company and location to start from, and where the entry goes. */
+  newRole?: { company: string; location: string; insertAt: number };
 };
 
-function AddExperience({ resumeId, experienceIndex, experiences, onClose, onLocalSave }: AddExperienceProps) {
+function AddExperience({
+  resumeId,
+  experienceIndex,
+  experiences,
+  onClose,
+  onLocalSave,
+  newRole,
+}: AddExperienceProps) {
   const experienceToEdit =
     experienceIndex !== undefined ? experiences?.[experienceIndex] : undefined;
 
@@ -51,6 +60,11 @@ function AddExperience({ resumeId, experienceIndex, experiences, onClose, onLoca
         }
       : {
           resumeId,
+          ...(newRole && {
+            company: newRole.company,
+            location: newRole.location,
+            insertAt: newRole.insertAt,
+          }),
           startDate: "",
           endDate: null,
           jobDescription: "",
@@ -96,7 +110,9 @@ function AddExperience({ resumeId, experienceIndex, experiences, onClose, onLoca
   return (
     <div className="rounded-lg border bg-card p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold">{isEdit ? "Edit Experience" : "Add Experience"}</h3>
+        <h3 className="text-sm font-semibold">
+          {isEdit ? "Edit Experience" : newRole ? `Add Role at ${newRole.company}` : "Add Experience"}
+        </h3>
         <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={onClose}>
           <X className="h-4 w-4" />
         </Button>
