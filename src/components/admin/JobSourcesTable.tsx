@@ -101,7 +101,7 @@ function JobSourcesTable({
                 <TableCell className="font-medium">
                   {source._count?.jobsApplied ? (
                     <Link
-                      href={`/dashboard/myjobs?source=${encodeURIComponent(source.value)}&applied=true`}
+                      href="/dashboard/applications"
                       className="text-primary underline-offset-4 hover:underline"
                     >
                       {source._count.jobsApplied}
@@ -123,7 +123,7 @@ function JobSourcesTable({
                       {source._count?.jobsApplied ? (
                         <DropdownMenuItem className="cursor-pointer" asChild>
                           <Link
-                            href={`/dashboard/myjobs?source=${encodeURIComponent(source.value)}&applied=true`}
+                            href="/dashboard/applications"
                           >
                             <Briefcase className="mr-2 h-4 w-4" />
                             View Jobs

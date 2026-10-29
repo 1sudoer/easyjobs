@@ -57,7 +57,7 @@ export function NewResumeView() {
 
       {/* Top bar */}
       <div className="flex items-center gap-2 shrink-0">
-        <Link href="/dashboard/profile">
+        <Link href="/dashboard/job-profiles">
           <Button variant="ghost" size="sm" className="gap-1.5 px-2">
             <ArrowLeft className="h-4 w-4" />
             <span className="hidden sm:inline">Back</span>

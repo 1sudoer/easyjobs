@@ -114,7 +114,7 @@ function CompaniesTable({
                 <TableCell className="font-medium">
                   {company._count?.jobsApplied ? (
                     <Link
-                      href={`/dashboard/myjobs?company=${encodeURIComponent(company.value)}&applied=true`}
+                      href="/dashboard/applications"
                       className="text-primary underline-offset-4 hover:underline"
                     >
                       {company._count.jobsApplied}
@@ -139,7 +139,7 @@ function CompaniesTable({
                       {company._count?.jobsApplied ? (
                         <DropdownMenuItem className="cursor-pointer" asChild>
                           <Link
-                            href={`/dashboard/myjobs?company=${encodeURIComponent(company.value)}&applied=true`}
+                            href="/dashboard/applications"
                           >
                             <Briefcase className="mr-2 h-4 w-4" />
                             View Jobs

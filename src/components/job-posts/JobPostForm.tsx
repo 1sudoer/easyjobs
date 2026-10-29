@@ -24,6 +24,7 @@ import { Combobox } from '@/components/ComboBox'
 import { getAllCompanies } from '@/actions/company.actions'
 import { getAllJobLocations } from '@/actions/jobLocation.actions'
 import { createLocation } from '@/actions/job.actions'
+import { toast } from '@/components/ui/use-toast'
 import { getJobSourceList } from '@/actions/jobSource.actions'
 import { JOB_TYPES } from '@/models/job.model'
 import { CREATE_JOB_POST, UPDATE_JOB_POST, JOB_POSTS_QUERY, JOB_POST_QUERY, CHECK_DUPLICATE_JOB_POSTS, JOB_POST_TAGS_QUERY, CREATE_JOB_POST_TAG } from '@/lib/graphql/queries'
@@ -342,10 +343,16 @@ export function JobPostForm({ editPost, onSuccess, onCancel }: JobPostFormProps)
                                   try {
                                     const res = await createLocation(label)
                                     const loc = res?.data
-                                    if (loc?.id) {
-                                      setLocationOptions((prev) =>
-                                        prev.find((l) => l.id === loc.id) ? prev : [...prev, loc]
-                                      )
+                                    if (!res?.success || !loc?.id) {
+                                      toast({ variant: 'destructive', title: 'Error!', description: res?.message ?? 'Failed to create location.' })
+                                      return
+                                    }
+                                    setLocationOptions((prev) =>
+                                      prev.find((l) => l.id === loc.id) ? prev : [...prev, loc]
+                                    )
+                                    // The server returns the existing row when the name is taken,
+                                    // which may already be selected.
+                                    if (!field.value.includes(loc.id)) {
                                       field.onChange([...field.value, loc.id])
                                     }
                                     setLocationSearch('')
