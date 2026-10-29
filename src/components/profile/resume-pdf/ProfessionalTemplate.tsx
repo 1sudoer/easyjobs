@@ -207,7 +207,7 @@ const ExperienceSection = memo(function ExperienceSection({
           return (
             <Fragment key={index}>
               <EntryHeader theme={theme} first={index === 0} role={r > 0} rows={rows} />
-              {nodes[index]}
+              {nodes[index]?.length ? <View style={styles.entryContent}>{nodes[index]}</View> : null}
             </Fragment>
           );
         }),

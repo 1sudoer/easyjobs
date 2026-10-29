@@ -67,6 +67,7 @@ export function createResumeStyles(
     listRowSpacing,
     entrySpacing,
     entryHeaderBottomSpacing,
+    entryContentIndent,
     skillSpacing,
   } = settings;
 
@@ -143,6 +144,7 @@ export function createResumeStyles(
     },
     entryLeft: { flex: 1, paddingRight: 12 },
     entryRight: { flexShrink: 0, textAlign: "right" },
+    entryContent: { paddingLeft: entryContentIndent },
     entryTitle: { fontFamily: "Helvetica-Bold" },
     entrySubtitle: {},
     entryMeta: { color: metaColor },
