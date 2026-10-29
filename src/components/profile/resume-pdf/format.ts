@@ -81,3 +81,45 @@ export function contactItems(contactInfo: {
     github ? (github.href ? { label: "GitHub", href: github.href } : github) : null,
   ].filter((item): item is ContactItem => item !== null);
 }
+
+/** One company on the resume and the roles held there, in list order. */
+export type ExperienceGroup<T> = {
+  company: string;
+  /** The location every role shares, or "" when the roles differ. */
+  location: string;
+  /** Each role with its position in the original list, so per-entry data still lines up. */
+  roles: { exp: T; index: number }[];
+};
+
+function companyKey(company?: string | null): string {
+  return company?.trim().toLowerCase() ?? "";
+}
+
+/**
+ * Groups back-to-back entries at the same company, so a promotion prints as one
+ * company with several roles. Only neighbours are grouped: a return to an
+ * earlier employer after another job stays its own entry. An entry without a
+ * company is never grouped.
+ */
+export function groupExperiences<T extends { company?: string | null; location?: string | null }>(
+  experiences: T[],
+): ExperienceGroup<T>[] {
+  const groups: ExperienceGroup<T>[] = [];
+  experiences.forEach((exp, index) => {
+    const key = companyKey(exp.company);
+    const last = groups[groups.length - 1];
+    if (key && last && companyKey(last.company) === key) {
+      last.roles.push({ exp, index });
+      if (last.location.toLowerCase() !== (exp.location?.trim() ?? "").toLowerCase()) {
+        last.location = "";
+      }
+      return;
+    }
+    groups.push({
+      company: exp.company?.trim() ?? "",
+      location: exp.location?.trim() ?? "",
+      roles: [{ exp, index }],
+    });
+  });
+  return groups;
+}

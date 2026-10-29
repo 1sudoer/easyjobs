@@ -2,6 +2,8 @@ import { z } from "zod";
 
 export const AddExperienceFormSchema = z.object({
   index: z.number().optional(),
+  /** Where a new entry goes in the list; the end when absent. */
+  insertAt: z.number().optional(),
   resumeId: z.string().optional(),
   title: z
     .string({

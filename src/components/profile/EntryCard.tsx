@@ -1,6 +1,6 @@
 "use client";
 import type { ReactNode } from "react";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Plus, Trash2 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
 import { DragHandle, type DragHandleProps } from "./SortableList";
@@ -19,6 +19,8 @@ export function EntryCard({
   onEdit,
   onDelete,
   deleteDisabled = false,
+  onAdd,
+  addLabel,
 }: {
   handle: DragHandleProps;
   /** What the entry is called, for screen-reader labels, e.g. "Acme Corp". */
@@ -29,6 +31,10 @@ export function EntryCard({
   onEdit: () => void;
   onDelete?: () => void;
   deleteDisabled?: boolean;
+  /** Adds a related entry, e.g. another role at the same company. */
+  onAdd?: () => void;
+  /** Tooltip and screen-reader label for the add button. */
+  addLabel?: string;
 }) {
   return (
     <Card className="flex items-start gap-1 py-2 pl-1 pr-1">
@@ -39,6 +45,18 @@ export function EntryCard({
         {details ? <p className="truncate text-xs text-muted-foreground">{details}</p> : null}
       </div>
       <div className="flex shrink-0 gap-0.5">
+        {onAdd ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0"
+            aria-label={addLabel}
+            title={addLabel}
+            onClick={onAdd}
+          >
+            <Plus className="h-3.5 w-3.5" />
+          </Button>
+        ) : null}
         <Button
           variant="ghost"
           size="sm"

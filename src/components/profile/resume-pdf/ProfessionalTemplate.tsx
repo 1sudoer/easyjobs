@@ -6,6 +6,7 @@ import {
   contactItems,
   dateRange,
   displayUrl,
+  groupExperiences,
   joinParts,
   toHref,
 } from "./format";
@@ -36,17 +37,26 @@ Font.registerHyphenationCallback((word) => [word]);
 function EntryHeader({
   rows,
   first,
+  role = false,
   theme,
 }: {
   rows: { left: React.ReactNode; right?: string | null }[];
   /** First entry of its section, which needs no space above it. */
   first: boolean;
+  /** A later role under the same company, which sits closer to the one above. */
+  role?: boolean;
   theme: ResumeTheme;
 }) {
   const { styles } = theme;
   return (
     <View
-      style={first ? styles.entryHeader : styles.entryHeaderFollowing}
+      style={
+        first
+          ? styles.entryHeader
+          : role
+            ? styles.roleHeaderFollowing
+            : styles.entryHeaderFollowing
+      }
       wrap={false}
       minPresenceAhead={theme.breaks.entryHeader}
     >
@@ -153,39 +163,55 @@ const ExperienceSection = memo(function ExperienceSection({
 
   return (
     <Section title="Experience" theme={theme}>
-      {experiences.map((experience, i) => {
-        const company = experience.company?.trim();
-        const location = experience.location?.trim();
-        const jobTitle = experience.jobTitle?.trim();
-        const dates = dateRange(
-          experience.startDate,
-          experience.endDate,
-          experience.currentJob,
-        );
-        // Company and location first, then title and dates — the conventional
-        // US order. Without a company the title moves up and stays bold.
-        const rows = company
-          ? [
-              {
-                left: <Text style={styles.entryTitle}>{company}</Text>,
-                right: location,
-              },
-              { left: <Text style={styles.italic}>{jobTitle}</Text>, right: dates },
-            ]
-          : [
-              {
-                left: <Text style={styles.entryTitle}>{jobTitle}</Text>,
-                right: location,
-              },
-              ...(dates ? [{ left: null, right: dates }] : []),
-            ];
-        return (
-          <Fragment key={i}>
-            <EntryHeader theme={theme} first={i === 0} rows={rows} />
-            {nodes[i]}
-          </Fragment>
-        );
-      })}
+      {groupExperiences(experiences).map((group, g) =>
+        group.roles.map(({ exp: experience, index }, r) => {
+          const company = group.company;
+          const jobTitle = experience.jobTitle?.trim();
+          const dates = dateRange(
+            experience.startDate,
+            experience.endDate,
+            experience.currentJob,
+          );
+          // When roles at one company differ in location, each role names its own.
+          const roleLocation = group.location ? null : experience.location?.trim();
+          const roleRow = {
+            left: (
+              <Text>
+                <Text style={styles.italic}>{jobTitle}</Text>
+                {roleLocation && group.roles.length > 1 ? ` · ${roleLocation}` : null}
+              </Text>
+            ),
+            right: dates,
+          };
+          // Company and location first, then title and dates — the conventional
+          // US order. Later roles at the same company show only title and dates.
+          // Without a company the title moves up and stays bold.
+          const rows =
+            r > 0
+              ? [roleRow]
+              : company
+                ? [
+                    {
+                      left: <Text style={styles.entryTitle}>{company}</Text>,
+                      right: group.location || (group.roles.length > 1 ? null : roleLocation),
+                    },
+                    roleRow,
+                  ]
+                : [
+                    {
+                      left: <Text style={styles.entryTitle}>{jobTitle}</Text>,
+                      right: experience.location?.trim(),
+                    },
+                    ...(dates ? [{ left: null, right: dates }] : []),
+                  ];
+          return (
+            <Fragment key={index}>
+              <EntryHeader theme={theme} first={index === 0} role={r > 0} rows={rows} />
+              {nodes[index]}
+            </Fragment>
+          );
+        }),
+      )}
     </Section>
   );
 });

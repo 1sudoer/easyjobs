@@ -280,7 +280,12 @@ export const addExperience = async (
       currentJob: data.currentJob ?? false,
       description: data.jobDescription,
     };
-    const updated = [...experiences, newExp];
+    // A new role at an existing company goes right after it, so the two print together.
+    const at =
+      data.insertAt !== undefined && data.insertAt >= 0 && data.insertAt <= experiences.length
+        ? data.insertAt
+        : experiences.length;
+    const updated = [...experiences.slice(0, at), newExp, ...experiences.slice(at)];
 
     await prisma.resume.update({
       where: { id: data.resumeId },

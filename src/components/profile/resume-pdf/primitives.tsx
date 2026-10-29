@@ -131,6 +131,11 @@ export function createResumeStyles(
       marginTop: entrySpacing,
       marginBottom: entryHeaderBottomSpacing,
     },
+    /** A later role at the same company: closer to the role above than a new entry is. */
+    roleHeaderFollowing: {
+      marginTop: entrySpacing / 2,
+      marginBottom: entryHeaderBottomSpacing,
+    },
     entryRow: {
       flexDirection: "row",
       justifyContent: "space-between",
